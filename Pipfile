@@ -1,0 +1,28 @@
+[[source]]
+name = "pypi"
+verify_ssl = true
+url = "https://pypi.python.org/simple"
+
+[packages]
+"nose2" = "*"
+sqlitedict = "*"
+pandas = "*"
+black = "*"
+mypy = "*"
+wikiparse = {editable = true,path = "."}
+ujson = "*"
+flake8 = "*"
+tblib = "*"
+mediawiki-utilities = "*"
+mwparserfromhell = "*"
+boltons = "*"
+click-log = "*"
+mwxml = "*"
+
+[requires]
+python_version = "3.7"
+
+[dev-packages]
+
+[pipenv]
+allow_prereleases = true

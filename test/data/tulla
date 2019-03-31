@@ -1,0 +1,133 @@
+==Estonian==
+
+===Verb===
+{{head|et|verb form}}
+
+# {{et-verb form of|t=da|tulema}}
+
+----
+
+==Finnish==
+{{Finnish index|t|u}}
+
+===Etymology===
+From {{inh|fi|fiu-fin-pro|*tuldak}}, From {{inh|fi|urj-pro|*tole-}}. Cognate with Hungarian {{m|hu|talál}}.
+
+===Pronunciation===
+* {{fi-IPA|*}}
+* {{rhymes|ulːɑ|lang=fi}}
+* {{hyphenation|tul|la|lang=fi}}
+
+===Verb===
+{{fi-verb}}
+
+# {{lb|fi|intransitive}} to [[come]]
+#: ''Hän '''tulee'''.''
+#:: ''She '''comes'''.''
+# {{lb|fi|intransitive|''elative'' + 3rd-pers. singular + ''noun/adjective in nominative or partitive'' '''''or''''' tulla by person + ''translative''}} to [[become]], [[get]], [[go]], [[turn]]
+#: ''Hänestä '''tuli''' rikas.''
+#:: ''She '''became''' rich.''
+#: ''He '''tulivat''' hulluiksi.''
+#:: ''They '''went''' crazy.''
+# {{lb|fi|intransitive|impersonal|''genitive +'' 3rd-pers. singular + ''infinitive''}} to [[have]] to do, [[be]] to do, [[should]] do, be [[supposed to]] do
+#: ''Minun '''tulee''' tehdä tämä huomiseksi.''
+#:: ''I '''have to''' do this by tomorrow.''
+# {{lb|fi|intransitive}} Auxiliary verb for emphasized future tense. Usually, the [[nonpast|nonpast tense]] should be used instead of this.
+#: ''Nimeni on Tapani ja tapani '''tulette''' tuntemaan.
+#:: ''My name is Tapani and you '''will''' learn my manners.''
+# {{lb|fi|intransitive| + passive past participle in translative}} Auxiliary verb for passive voice.
+#: ''Hän '''tuli''' valituksi''.
+#:: ''He '''was''' chosen.''
+#: ''Tapa tai '''tule''' tapetuksi''.
+#:: ''Kill or '''be''' killed.''
+# {{lb|fi|intransitive|slang}} to [[cum]], [[orgasm]]
+# {{lb|fi|intransitive|''+ active past participle in translative''}} to [[manage]] to do (more or less unintentionally), [[succeed]] in doing (more or less unintentionally)
+#: ''Hän '''tuli''' tehneeksi pahan virheen.''
+#:: ''She '''managed''' to make a big mistake.''
+
+====Conjugation====
+{{fi-conj-tulla|t|||ul|a}}
+
+====Synonyms====
+* {{sense|to become}} {{l|fi|muuttua}} (''+ translative'')
+* {{sense|to have to do}} {{l|fi|pitää|''genitive'' + 3rd-pers. singular of ''pitää'' + ''infinitive''}}, {{l|fi|olla|''genitive'' + 3rd-pers. singular of ''olla'' + passive present participle}}, {{l|fi|olla|''genitive'' + 3rd-pers. singular of ''olla'' + määrä + ''infinitive''}}
+* {{sense|to come/cum|orgasm}} {{l|fi|saada}} [[orgasmi]]
+
+====Antonyms====
+* {{sense|to come}} {{l|fi|mennä}}, {{l|fi|lähteä}}, {{l|fi|poistua}}
+
+====Derived terms====
+{{der-top}}
+* adjectives: [[tuleva]]
+* nouns: [[tuleminen]], [[tuliainen]], [[tulija]], [[tulo]], [[tulos]]
+{{der-mid}}
+* {{l|fi|tulla toimeen}}: to [[get along]]
+* {{l|fi|tulla voimaan}}: (''of a law'') to [[take effect]]
+{{der-bottom}}
+
+===See also===
+* {{l|fi|saapua}}
+
+----
+
+==Galician==
+
+===Alternative forms===
+* {{l|gl|tuña}}
+
+===Etymology===
+{{unk|lang=gl}}. Documented since the 10th century in local {{etyl|ML.|gl}} charters as {{m|la|tulia}};<ref>{{R:gl:Enxoval|301}}</ref> unlikely from {{inh|gl|la|tubulus|tubula|t=small tube}}<ref>{{R:DCECH|tubo}}</ref> which originates {{m|gl|tolva}}.
+
+===Pronunciation===
+* {{IPA|/ˈtuʎa̝/|lang=gl}}
+
+===Noun===
+{{gl-noun|f}}
+
+# [[chest]] or place for storing the [[crop]]
+
+====Derived terms====
+* {{l|gl|entullar}}
+* {{l|gl|entullo}}
+
+===References===
+* {{R:DDGM}}
+* {{R:DDLG}}
+* {{R:TILG}}
+* {{R:TLPGP}}
+<references />
+
+----
+
+==Spanish==
+
+===Verb===
+{{head|es|verb form}}
+
+# {{es-verb form of|tullir|ending=-ir|mood=subjunctive|tense=present|number=s|person=1}}
+# {{es-verb form of|tullir|ending=-ir|mood=subjunctive|tense=present|number=s|person=2|formal=y}}
+# {{es-verb form of|tullir|ending=-ir|mood=subjunctive|tense=present|number=s|person=3}}
+# {{es-verb form of|tullir|ending=-ir|mood=imperative|number=s|person=2|formal=y|sense=affirmative}}
+
+----
+
+==Votic==
+
+===Etymology===
+From {{inh|vot|fiu-fin-pro|*tuldak}}, from {{etyl|urj-pro|vot}} {{m|urj-pro|*tole-}}.
+
+===Verb===
+{{vot-verb|tulõn|tulin}}
+
+# to [[come]]
+# to [[arrive]]
+# {{lb|vot|of rain, snow etc.}} to [[come down]], to [[fall]]
+# to [[come to pass]], to [[happen]]
+# to [[come up]], to [[arise]], to [[appear]]
+# to [[become]], to [[turn into]]
+
+====Inflection====
+{{rfinfl|vot|verb}}
+
+===References===
+* {{R:vot:VKS}}
