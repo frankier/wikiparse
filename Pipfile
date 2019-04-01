@@ -18,6 +18,7 @@ mwparserfromhell = "*"
 boltons = "*"
 click-log = "*"
 mwxml = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.7"
