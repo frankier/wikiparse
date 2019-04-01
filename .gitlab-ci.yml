@@ -26,9 +26,9 @@ test:typecheck:
   stage: test
   image: $CI_REGISTRY_IMAGE
   script:
-    - mypy stiff scripts
+    - mypy wikiparse parse.py
 
-test:pytest:
+test:nose2:
   stage: test
   image: $CI_REGISTRY_IMAGE
   script:
