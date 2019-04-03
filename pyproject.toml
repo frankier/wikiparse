@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "wikiparse"
+version = "0.0.1"
+description = "Wiktionary parsing for Finnish word definitions"
+authors = ["Frankie Robertson <frankie@robertson.name>"]
+license = "Apache-2.0"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+sqlitedict = "*"
+pandas = "*"
+ujson = "*"
+tblib = "*"
+mediawiki-utilities = "*"
+mwparserfromhell = "*"
+boltons = "*"
+click-log = "*"
+mwxml = "*"
+sqlalchemy = "*"
+more-itertools = "*"
+
+[tool.poetry.dev-dependencies]
+"nose2" = "*"
+flake8 = "^3.5.0"
+pre-commit = "^1.10.2"
+mypy = "*"
+black = "^19.3b0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
