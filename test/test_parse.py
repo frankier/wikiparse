@@ -70,3 +70,11 @@ def test_parse_nested_list_tulla():
     result = parse_nested_list(wikicode)
     assert len(result) == 7
     assert sum(bool(elem.children) for elem in result) == 6
+
+
+def test_vuotta_head_gram():
+    defns = parse_enwiktionary_page("vuotta", read_data("vuotta"))
+    ety1_form = defns["Etymology 1"]["Noun"][0].form
+    assert ety1_form and ety1_form["case"] == "abessive"
+    ety2_form = defns["Etymology 2"]["Noun"][0].form
+    assert ety2_form and ety2_form["case"] == "partitive"

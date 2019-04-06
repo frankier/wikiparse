@@ -8,9 +8,9 @@ from pprint import pprint
 from tarfile import TarFile
 
 from wikiparse.parse import process_dump, parse_enwiktionary_page, get_finnish_words
-from wikiparse.insert import insert_defns
+from wikiparse.insert import insert_defns, insert_morph
 from wikiparse.stats_log import install_db_stats_logger
-from wikiparse.utils.db import get_session
+from wikiparse.utils.db import batch_commit, get_session
 
 
 class IterDirOrTar(object):
@@ -64,9 +64,20 @@ def parse_dump(filename: str, words=None, stats_db=None, outdir=None):
 
 
 def insert_dir_inner(db, indir: str):
+    headword_id_map = {}
+    all_morphs = []
     with click.progressbar(IterDirOrTar(indir), label="Inserting defns") as words:
-        for word, defns in words:
-            insert_defns(db, word, defns)
+        def defns_batch(elem):
+            word, defns = elem
+            (headword_id, lemma_name), morphs = insert_defns(db, word, defns)
+            headword_id_map[lemma_name] = headword_id
+            all_morphs.extend(morphs)
+        batch_commit(db, words, defns_batch)
+    with click.progressbar(all_morphs, label="Inserting inflections") as morphs:
+        def morph_batch(id_morph):
+            (word_sense_id, morph) = id_morph
+            insert_morph(db, word_sense_id, morph, headword_id_map)
+        batch_commit(db, morphs, morph_batch)
 
 
 @parse.command()

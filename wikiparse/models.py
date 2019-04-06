@@ -43,6 +43,10 @@ class Defn:
     assoc: AssocBits
     subsenses: List[Defn] = field(default_factory=list)
 
+    fi_examples: List[Example] = field(default_factory=list)
+    bi_examples: List[Example] = field(default_factory=list)
+    morph: Dict = None
+
 
 @dataclass
 class Example(MergeMixin):
@@ -52,7 +56,6 @@ class Example(MergeMixin):
 
 @dataclass
 class DefnTreeFrag(MergeMixin):
-    head_gram: List[Dict] = field(default_factory=list)
     senses: List[Defn] = field(default_factory=list)
     fi_examples: List[Example] = field(default_factory=list)
     en_examples: List[Example] = field(default_factory=list)

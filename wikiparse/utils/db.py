@@ -51,3 +51,11 @@ def get_session(db):
     engine = create_engine(db)
     session = sessionmaker(bind=engine)
     return scoped_session(session)
+
+
+def batch_commit(db, iter, func, batch_size=1000):
+    for idx, elem in enumerate(iter):
+        func(elem)
+        if (idx % batch_size) == (batch_size - 1):
+            db.commit()
+    db.commit()

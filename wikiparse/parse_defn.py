@@ -275,7 +275,7 @@ def proc_form_template(tmpl: Template):
             if not str(param.name).isdigit():
                 form_gram[str(param.name)] = str(param.value)
             if idx == len(tmpl.params) - 1:
-                form_gram["lemma"] = param.value
+                form_gram["lemma"] = str(param.value)
     return form_gram
 
 
@@ -285,8 +285,9 @@ def proc_sense(
     form_template: Optional[Template] = None,
 ) -> DefnTreeFrag:
     result = DefnTreeFrag()
+    morph_dict = None
     if form_template is not None:
-        result.head_gram.append(proc_form_template(form_template))
+        morph_dict = proc_form_template(form_template)
     # Sense
     # multiple senses
     defns = contents.split(";")
@@ -304,7 +305,10 @@ def proc_sense(
         unknown_structure("too-many-subsenses", len(defns))
     sense_dicts = []
     for defn_txt in defns:
-        sense_dicts.append(get_defn_info(defn_txt))
+        defn_info = get_defn_info(defn_txt)
+        if morph_dict is not None:
+            defn_info.morph = morph_dict
+        sense_dicts.append(defn_info)
     example_type = None
     examples: List[Any] = []
     if len(children_result.bi_examples):
