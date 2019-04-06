@@ -45,22 +45,25 @@ def parse():
 
 
 @parse.command()
-@click.argument("filename")
+@click.argument("inf", type=click.File())
 @click.argument("words", required=False)
 @click.option("--stats-db")
 @click.option("--outdir")
-def parse_dump(filename: str, words=None, stats_db=None, outdir=None):
+def parse_dump(inf, words=None, stats_db=None, outdir=None):
     if stats_db is not None:
         install_db_stats_logger(stats_db)
     logging.basicConfig(filename="example.log", level=logging.DEBUG)
     # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-    if filename.endswith(".xml"):
-        process_dump(filename, outdir, words)
-    else:
-        defns = parse_enwiktionary_page(filename, open(filename).read())
-        if defns is None:
-            print("No definitions found")
-        pprint(defns)
+    process_dump(inf, outdir, words)
+
+
+@parse.command()
+@click.argument("filename", type=click.File())
+def parse_file(filename):
+    defns = parse_enwiktionary_page(filename, open(filename).read())
+    if defns is None:
+        print("No definitions found")
+    pprint(defns)
 
 
 def insert_dir_inner(db, indir: str):

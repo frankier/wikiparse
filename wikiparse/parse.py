@@ -14,7 +14,7 @@ import ujson
 from pybloom import ScalableBloomFilter
 from typing import Any, Dict, List, Union, Optional, Tuple, Iterator
 import mwxml
-from mwxml.iteration import page as mwxml_iteration_page
+from mwxml.iteration import Dump, page as mwxml_iteration_page
 
 from wikiparse.utils.wikicode import (
     get_heading_node,
@@ -128,13 +128,13 @@ class TextOnlyRevisionMonkeyPatch:
 mwxml_iteration_page.Revision = TextOnlyRevisionMonkeyPatch
 
 
-def process_dump(fn: str, outdir, sbf=None):
+def process_dump(inf, outdir, sbf=None):
     if sbf is not None:
         with open(sbf, "rb") as fh:
             sbf = ScalableBloomFilter.fromfile(fh)
 
     def page_info(
-        dump, path
+        dump
     ) -> Iterator[Tuple[str, Union[DefnListDictTree2L, ExceptionWrapper]]]:
         get_stats_logger().reopen()
         total = 0
@@ -184,7 +184,7 @@ def process_dump(fn: str, outdir, sbf=None):
 
     makedirs(outdir, exist_ok=True)
     successful = 0
-    for lemma, defns in mwxml.map(page_info, [fn]):
+    for lemma, defns in page_info(Dump.from_file(inf)):
         try:
             if isinstance(defns, ExceptionWrapper):
                 print("Error while processing {}.".format(lemma))
