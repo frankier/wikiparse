@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wikiparse"
-version = "0.0.1"
+version = "0.1.0"
 description = "Wiktionary parsing for Finnish word definitions"
 authors = ["Frankie Robertson <frankie@robertson.name>"]
 license = "Apache-2.0"
