@@ -11,7 +11,6 @@ def db():
 
 
 @db.command()
-@click.argument("db")
-def create(db: str):
-    session = get_session(db)
+def create():
+    session = get_session()
     metadata.create_all(session().get_bind().engine)

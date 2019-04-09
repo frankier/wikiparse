@@ -85,9 +85,8 @@ def insert_dir_inner(db, indir: str):
 
 @parse.command()
 @click.argument("indir")
-@click.argument("db")
-def insert_dir(indir: str, db: str):
-    insert_dir_inner(get_session(db), indir)
+def insert_dir(indir: str):
+    insert_dir_inner(get_session(), indir)
 
 
 @parse.command()

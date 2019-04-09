@@ -1,6 +1,7 @@
 from functools import reduce
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
+import os
 
 
 def select_or_insert(session, table, insert_kwargs=None, **kwargs):
@@ -44,9 +45,14 @@ def insert_get_id(session, table, **kwargs):
     return session.execute(table.insert().values(**kwargs)).inserted_primary_key[0]
 
 
-def get_session(db):
+def get_session(db=None):
     from sqlalchemy import create_engine
     from sqlalchemy.orm import scoped_session, sessionmaker
+
+    if db is None:
+        db = os.getenv('DATABASE_URL')
+        if db is None:
+            raise RuntimeError("DATABASE_URL not set")
 
     engine = create_engine(db)
     session = sessionmaker(bind=engine)
