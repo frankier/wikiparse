@@ -74,7 +74,7 @@ def test_parse_nested_list_tulla():
 
 def test_vuotta_head_gram():
     defns = parse_enwiktionary_page("vuotta", read_data("vuotta"))
-    ety1_form = defns["Etymology 1"]["Noun"][0].form
+    ety1_form = defns["Etymology 1"]["Noun"][0].morph
     assert ety1_form and ety1_form["case"] == "abessive"
-    ety2_form = defns["Etymology 2"]["Noun"][0].form
+    ety2_form = defns["Etymology 2"]["Noun"][0].morph
     assert ety2_form and ety2_form["case"] == "partitive"
