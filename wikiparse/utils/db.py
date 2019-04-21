@@ -41,7 +41,7 @@ def insert(session, table, **kwargs):
     return session.execute(table.insert().values(**kwargs))
 
 
-def insert_get_id(session, table, **kwargs):
+def insert_get_id(session, table, **kwargs) -> int:
     return session.execute(table.insert().values(**kwargs)).inserted_primary_key[0]
 
 

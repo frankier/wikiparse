@@ -6,6 +6,7 @@ from os.path import join as pjoin, isdir, basename
 import ujson
 from pprint import pprint
 from tarfile import TarFile
+from typing import Dict, List, Optional, Tuple
 
 from wikiparse.parse import process_dump, parse_enwiktionary_page, get_finnish_words
 from wikiparse.insert import insert_defns, insert_morph
@@ -68,7 +69,7 @@ def parse_file(filename):
 
 def insert_dir_inner(db, indir: str):
     headword_id_map = {}
-    all_morphs = []
+    all_morphs = []  # type: List[Tuple[int, Optional[Dict]]]
     with click.progressbar(IterDirOrTar(indir), label="Inserting defns") as words:
         def defns_batch(elem):
             word, defns = elem

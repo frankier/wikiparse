@@ -1,6 +1,6 @@
 from wikiparse import tables
 from wikiparse.utils.db import insert_get_id
-from typing import cast, Dict, List, TypeVar, Tuple, Iterator
+from typing import cast, Dict, List, Optional, TypeVar, Tuple, Iterator
 from .models import DictTree2L
 
 
@@ -13,7 +13,7 @@ def flatten(nested_senses, ety, prefix):
             yield prefix + "{}.{}".format(pos, sense_idx + 1), ety, pos, sense
 
 
-def flatten_senses(nested_senses: DictTree2L[List[T]]) -> Iterator[Tuple[str, str, T]]:
+def flatten_senses(nested_senses: DictTree2L[List[T]]) -> Iterator[Tuple[str, int, str, T]]:
     if isinstance(next(iter(nested_senses.values())), list):
         nested_senses = cast(Dict[str, List[T]], nested_senses)
         yield from flatten(nested_senses, None, "")
@@ -24,10 +24,10 @@ def flatten_senses(nested_senses: DictTree2L[List[T]]) -> Iterator[Tuple[str, st
             yield from flatten(outer_senses, ety, etymology.replace(" ", "") + ".")
 
 
-def insert_defns(session, lemma_name: str, defns: DictTree2L[List[Dict]]):
-    morphs = []
+def insert_defns(session, lemma_name: str, defns: DictTree2L[List[Dict]]) -> Tuple[Tuple[int, str], List[Tuple[int, Optional[Dict]]]]:
+    morphs = []  # type: List[Tuple[int, Optional[Dict]]]
     headword_id = insert_get_id(session, tables.headword, name=lemma_name)
-    for full_id, ety, pos, sense in flatten_senses(defns):  # type: Tuple[str, str, Dict]
+    for full_id, ety, pos, sense in flatten_senses(defns):  # type: Tuple[str, int, str, Dict]
         stripped_defn = sense["stripped_defn"]
         sense.pop("bi_examples", {})
         sense.pop("fi_examples", {})

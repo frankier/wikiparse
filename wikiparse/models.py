@@ -45,7 +45,7 @@ class Defn:
 
     fi_examples: List[Example] = field(default_factory=list)
     bi_examples: List[Example] = field(default_factory=list)
-    morph: Dict = None
+    morph: Optional[Dict] = None
 
 
 @dataclass
