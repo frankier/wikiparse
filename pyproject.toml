@@ -19,7 +19,7 @@ mwxml = "*"
 sqlalchemy = "*"
 more-itertools = "*"
 langdetect = "^1.0"
-pybloom-mirror = "^2.0"
+pybloom-mirror = ">=2.0.0"
 nltk = "^3.4"
 wordfreq = "^2.2"
 
