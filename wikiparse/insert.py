@@ -1,5 +1,5 @@
 from wikiparse import tables
-from wikiparse.utils.db import insert_get_id, insert
+from wikiparse.utils.db import insert_get_id
 from typing import cast, Dict, List, TypeVar, Tuple, Iterator
 from .models import DictTree2L
 
