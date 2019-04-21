@@ -16,7 +16,7 @@ def flatten(nested_senses, ety, prefix):
 def flatten_senses(nested_senses: DictTree2L[List[T]]) -> Iterator[Tuple[str, str, T]]:
     if isinstance(next(iter(nested_senses.values())), list):
         nested_senses = cast(Dict[str, List[T]], nested_senses)
-        return flatten(nested_senses, None, "")
+        yield from flatten(nested_senses, None, "")
     else:
         nested_senses = cast(Dict[str, Dict[str, List[T]]], nested_senses)
         for etymology, outer_senses in nested_senses.items():
