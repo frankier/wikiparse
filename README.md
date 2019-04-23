@@ -5,7 +5,7 @@ Scrapes some Finnish word definitions from English Wiktionary.
 Usage:
 
     $ poetry install
-    $ DATABASE_URL=enwiktionary-20171001.db poetry run ./scrape_to_sqlite.sh ~/corpora/enwiktionary-20171001-pages-meta-current.xml
+    $ DATABASE_URL=sqlite:///enwiktionary-20171001.db poetry run ./scrape_to_sqlite.sh ~/corpora/enwiktionary-20171001-pages-meta-current.xml
 
 You can also pipe straight from lbunzip2 run a multistream bzip2 file which
 should be about as fast on a multiprocessor machine (pbunzip2 segfaults when
