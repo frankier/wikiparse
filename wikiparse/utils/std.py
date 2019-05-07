@@ -23,7 +23,7 @@ class IterDirOrTar(object):
     def __iter__(self):
         if isdir(self.indir):
             for word in os.listdir(self.indir):
-                with open(pjoin(self.indir, word)) as defn_fp:
+                with open(pjoin(self.indir, word), "rb") as defn_fp:
                     yield word, defn_fp
         else:
             tf = TarFile(self.indir)
