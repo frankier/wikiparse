@@ -1,42 +1,14 @@
 import click
 import click_log
 import logging
-import os
-from os.path import join as pjoin, isdir, basename
-import ujson
 from pprint import pprint
-from tarfile import TarFile
 from typing import Dict, List, Optional, Tuple
 
 from wikiparse.parse import process_dump, parse_enwiktionary_page, get_finnish_words
 from wikiparse.insert import insert_defns, insert_morph
 from wikiparse.stats_log import install_db_stats_logger
 from wikiparse.utils.db import batch_commit, get_session
-
-
-class IterDirOrTar(object):
-    def __init__(self, indir):
-        self.indir = indir
-
-    def __len__(self):
-        if isdir(self.indir):
-            return len(os.listdir(self.indir))
-        else:
-            tf = TarFile(self.indir)
-            return sum((1 for m in tf.getmembers() if m.isfile()))
-
-    def __iter__(self):
-        if isdir(self.indir):
-            for word in os.listdir(self.indir):
-                with open(pjoin(self.indir, word)) as defn_fp:
-                    yield word, ujson.load(defn_fp)
-        else:
-            tf = TarFile(self.indir)
-            for member in tf.getmembers():
-                if member.isfile():
-                    yield basename(member.name), ujson.loads(
-                        tf.extractfile(member).read()
-                    )
+from wikiparse.utils import json_load
 
 
 @click.group()
@@ -71,8 +43,8 @@ def insert_dir_inner(db, indir: str):
     headword_id_map = {}
     all_morphs = []  # type: List[Tuple[int, Optional[Dict]]]
     with click.progressbar(IterDirOrTar(indir), label="Inserting defns") as words:
-        def defns_batch(elem):
-            word, defns = elem
+        def defns_batch(wordf):
+            word, defns = json_load(wordf)
             (headword_id, lemma_name), morphs = insert_defns(db, word, defns)
             headword_id_map[lemma_name] = headword_id
             all_morphs.extend(morphs)
