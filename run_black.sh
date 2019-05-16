@@ -1,1 +1,1 @@
-pipenv run black test wikiparse
+poetry run black test wikiparse

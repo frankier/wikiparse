@@ -1,1 +1,1 @@
-pipenv run flake8 test wikiparse
+poetry run flake8 test wikiparse
