@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, JSON, MetaData, Table
+from sqlalchemy import Column, Enum, Integer, String, ForeignKey, JSON, MetaData, Table
+from .models import DerivationType, RelationType
 
 metadata = MetaData()
 
@@ -18,12 +19,31 @@ inflection_of = Table(
     Column("inflection", JSON, nullable=False),
 )
 
-derived_from = Table(
-    "derived_from",
+derivation = Table(
+    "derivation",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("derived_id", Integer, ForeignKey("headword.id"), nullable=False),
+    Column("type", Enum(DerivationType), nullable=False),
+    Column("extra", JSON, nullable=False),
+)
+
+derivation_seg = Table(
+    "derivation_seg",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("derivation_id", Integer, ForeignKey("derivation.id"), nullable=False),
+    Column("derived_seg_id", Integer, ForeignKey("headword.id"), nullable=False),
+)
+
+relation = Table(
+    "relation",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("parent_id", Integer, ForeignKey("headword.id"), nullable=False),
     Column("child_id", Integer, ForeignKey("headword.id"), nullable=False),
+    Column("type", Enum(RelationType), nullable=False),
+    Column("extra", JSON, nullable=False),
 )
 
 word_sense = Table(

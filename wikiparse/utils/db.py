@@ -50,7 +50,7 @@ def get_session(db=None):
     from sqlalchemy.orm import scoped_session, sessionmaker
 
     if db is None:
-        db = os.getenv('DATABASE_URL')
+        db = os.getenv("DATABASE_URL")
         if db is None:
             raise RuntimeError("DATABASE_URL not set")
 

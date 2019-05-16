@@ -17,9 +17,7 @@ class DbStatsLogger:
             journal_mode="WAL",
         )
 
-    def append(self, record, add_curword=False):
-        if add_curword:
-            record["word"] = _curword
+    def append(self, record):
         self.db[uuid4().bytes] = record
 
 
@@ -27,7 +25,7 @@ class NullStatsLogger:
     def reopen(self):
         pass
 
-    def append(self, record, add_curword=False):
+    def append(self, record):
         pass
 
 

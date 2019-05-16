@@ -1,6 +1,5 @@
 import sys
 from typing import Any, Dict, List, Tuple
-from wikiparse.stats_log import get_stats_logger
 from contextlib import contextmanager
 
 
@@ -16,6 +15,7 @@ class ExceptionWrapper(object):
 
 
 UNKNOWN_STRUCTURE_MSGS = {
+    # Defns
     "expect-only": "Expected only {}. Got {}",
     "eng-assoc": "Putting English word '{}' in assoc not allowed.",
     "non-fin-assoc": "Putting non-Finnish word '{}' in assoc not allowed.",
@@ -33,36 +33,33 @@ UNKNOWN_STRUCTURE_MSGS = {
     "unknown-under-unknown": "Unknown can't be belown unknown",
     "max-one-example-below": "Expected only one example below this one",
     "multiple-form-tmpls": "Excepted only one word form template, got: '{}'",
+    # Etys
+    "mwe-ety": "Multiword expression etymology section not supported yet",
+    "multi-template-ety": "Multiple derrivation templates found in etymology",
+    "unknown-template": "Unknown template found in etymology: '{}'",
 }
 
 
 class UnknownStructureException(Exception):
-    # def __init__(self, msg, *extra):
-    # if not isinstance(msg, str) or 'content' in msg:
-    # print('PRINTING STACK')
-    # traceback.print_stack()
-    # print(msg, extra)
-    # super().__init__(msg.format(repr(v) for v in extra))
-
     def add_info(self, info):
-        # new_msg = self.args[0] + "\n" + repr(info)
-        # self.args = (new_msg,)
         self.args += (info,)
 
 
-def unknown_structure(nick, *extra):
-    get_stats_logger().append(
-        {
-            "type": "word_event",
-            "event": "unknown_structure",
-            "nick": nick,
-            "extra": extra,
-        },
-        add_curword=True,
-    )
-    raise UnknownStructureException(
+def mk_unknown_structure(nick, *extra):
+    exc = UnknownStructureException(
         UNKNOWN_STRUCTURE_MSGS[nick].format(*(repr(e) for e in extra))
     )
+    exc.log = {
+        "type": "word_event",
+        "event": "unknown_structure",
+        "nick": nick,
+        "extra": extra,
+    }
+    return exc
+
+
+def unknown_structure(nick, *extra):
+    raise mk_unknown_structure(nick, *extra)
 
 
 def expect_only(d: Dict[str, List[Any]], ks: Tuple[str, ...]):

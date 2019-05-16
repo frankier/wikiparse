@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # from parsepred.monkeypatch_multiprocessing import do_monkeypatch
 # do_monkeypatch()
+import logging
 import sys
 import tblib.pickling_support
 from mwparserfromhell import parse
@@ -12,73 +13,107 @@ from os import makedirs
 from os.path import join as pjoin
 import ujson
 from pybloom import ScalableBloomFilter
-from typing import Any, Dict, List, Union, Optional, Tuple, Iterator
+from typing import Any, Dict, List, Union, Tuple, Iterator
 import mwxml
 from mwxml.iteration import Dump, page as mwxml_iteration_page
 
-from wikiparse.utils.wikicode import (
-    get_heading_node,
-    get_heading_string,
-    get_heading,
-    get_lead,
-    parse_nested_list,
-    TextTreeList,
-)
+from wikiparse.utils.wikicode import get_heading, get_lead, parse_nested_list
 from wikiparse.stats_log import get_stats_logger, set_curword
 
 from .gram_words import POS
-from .parse_defn import map_tree_to_senses
-from .exceptions import ExceptionWrapper
-from .models import DefnListDictTree2L, TextTreeDictTree2L
+from .parse_defn import get_senses
+from .parse_ety import get_ety
+from .exceptions import (
+    ExceptionWrapper,
+    UnknownStructureException,
+    get_strictness,
+    PERMISSIVE,
+)
+from .utils.iter import orelse
 
 tblib.pickling_support.install()
 DetectorFactory.seed = 0
 
 
-def get_pos(sections: List[Wikicode]) -> Dict[str, TextTreeList]:
-    defn_lists = {}
+def handle_pos_sections(
+    sections: List[Wikicode]
+) -> Iterator[Tuple[str, Tuple[str, ...], Any]]:
+    """
+    Takes a list of sections and yield tagged, pathed, parsed fragments are
+    titled as second level titles, e.g. "Etymology" "Verb".
+    """
     for def_section in sections:
-        def_title_node = get_heading_node(def_section)
-        def_title = get_heading_string(def_title_node)
-        if def_title in POS:
-            def_section.remove(def_section.get(0))
-            definitions = get_lead(def_section)
-            str_def_title = str(def_title)
-            defn_lists[str_def_title] = parse_nested_list(definitions)
-        else:
-            get_stats_logger().append(
-                {"type": "unknown_pos_title", "title": str(def_title)}
-            )
-    return defn_lists
+        str_def_title = str(get_heading(def_section)).strip()
+        try:
+            if str_def_title == "Etymology":
+                def_section.remove(def_section.get(0))
+                etymology = get_lead(def_section)
+                for act, payload in get_ety(etymology):
+                    yield act, (str_def_title,), payload
+            elif str_def_title in POS:
+                def_section.remove(def_section.get(0))
+                definitions = get_lead(def_section)
+                for act, payload in get_senses(parse_nested_list(definitions)):
+                    yield act, (str_def_title,), payload
+            else:
+                get_stats_logger().append(
+                    {"type": "unknown_pos_title", "title": str_def_title}
+                )
+        except UnknownStructureException as exc:
+            yield "exception", (str_def_title,), exc
 
 
-def get_etymology(sections: List[Wikicode]) -> Dict[str, Dict[str, TextTreeList]]:
-    defn_lists = {}
+def handle_etymology_sections(
+    sections: List[Wikicode]
+) -> Iterator[Tuple[str, Tuple[str, ...], Any]]:
+    """
+    Takes a list of sections and yield tagged, pathed, parsed fragments are
+    titled as first level titles, e.g. "Etymology 2".
+    """
     for def_section in sections:
-        def_title_node = get_heading_node(def_section)
-        def_title = get_heading_string(def_title_node)
-        if def_title.startswith("Etymology "):
-            pos_defns = get_pos(def_section.get_sections(levels=[4]))
-            defn_lists[str(def_title)] = pos_defns
-    return defn_lists
+        str_def_title = str(get_heading(def_section))
+        if str_def_title.startswith("Etymology "):
+            for act, path, payload in handle_pos_sections(
+                def_section.get_sections(levels=[4])
+            ):
+                yield act, (str_def_title,) + path, payload
 
 
-def parse_enwiktionary_page(lemma: str, content: str) -> Optional[DefnListDictTree2L]:
+def parse_enwiktionary_page(lemma: str, content: str) -> Tuple[Dict, List[Any]]:
     set_curword(lemma)
     parsed = parse(content, skip_style_tags=True)
-    # XXX: Need to deal with multiple parts of speech
-    empty_dict: Dict[str, TextTreeList] = {}
-    defn_lists: TextTreeDictTree2L = empty_dict
+    defn_lists: Dict = {}
+    heads = []
     for lang_section in parsed.get_sections(levels=[2]):
         lang_title = get_heading(lang_section)
         if lang_title != "Finnish":
             continue
-        defn_lists = get_etymology(lang_section.get_sections(levels=[3]))
-        if not defn_lists:
-            defn_lists = get_pos(lang_section.get_sections(levels=[3]))
-    if defn_lists:
-        return map_tree_to_senses(defn_lists)
-    return None
+        for act, path, payload in orelse(
+            handle_etymology_sections(lang_section.get_sections(levels=[3])),
+            handle_pos_sections(lang_section.get_sections(levels=[3])),
+        ):
+            if act == "defn":
+                if len(path) == 1:
+                    defn_lists[path[0]] = payload
+                elif len(path) == 2:
+                    defn_lists.setdefault(path[0], {})[path[1]] = payload
+                else:
+                    raise
+            elif act == "head":
+                heads.append(payload.tagged_dict())
+            elif act == "exception":
+                if get_strictness() == PERMISSIVE:
+                    logging.exception("Ignored since in permissive mode: %s", payload)
+                else:
+                    raise payload
+                if hasattr(payload, "log"):
+                    loggable = payload.log
+                    loggable["word"] = lemma
+                    loggable["path"] = path
+                    get_stats_logger().append(loggable)
+            else:
+                raise
+    return defn_lists, heads
 
 
 def defns_is_empty(nested_senses: Any) -> bool:  # TODO: specify better type
@@ -133,9 +168,10 @@ def process_dump(inf, outdir, sbf=None):
         with open(sbf, "rb") as fh:
             sbf = ScalableBloomFilter.fromfile(fh)
 
+    # Dict with DefnListDictTree2L, List[Any]
     def page_info(
         dump
-    ) -> Iterator[Tuple[str, Union[DefnListDictTree2L, ExceptionWrapper]]]:
+    ) -> Iterator[Tuple[str, Union[ExceptionWrapper, Dict[str, Any]]]]:
         get_stats_logger().reopen()
         total = 0
         try:
@@ -151,52 +187,56 @@ def process_dump(inf, outdir, sbf=None):
                 revision = next(page)
                 if revision.text is None or "==Finnish==" not in revision.text:
                     continue
+                results = {}  # type: Dict[str, Any]
+
                 try:
-                    defns = parse_enwiktionary_page(page.title, revision.text)
+                    defns, heads = parse_enwiktionary_page(page.title, revision.text)
                 except Exception as exc:
                     get_stats_logger().append(
                         {"type": "word_event", "word": page.title, "event": "failure"}
                     )
-                    # print('EXCEPTION!')
-                    # print(page.title, exc)
                     yield (page.title, ExceptionWrapper(exc))
-                else:
-                    if defns is not None:
-                        if defns_is_empty(defns):
-                            get_stats_logger().append(
-                                {
-                                    "type": "word_event",
-                                    "word": page.title,
-                                    "event": "empty",
-                                }
-                            )
-                        else:
-                            get_stats_logger().append(
-                                {
-                                    "type": "word_event",
-                                    "word": page.title,
-                                    "event": "success",
-                                }
-                            )
-                            yield page.title, defns
+                    continue
+                if defns is not None:
+                    if defns_is_empty(defns):
+                        get_stats_logger().append(
+                            {
+                                "type": "word_event",
+                                "word": page.title,
+                                "event": "defns_empty",
+                            }
+                        )
+                    else:
+                        get_stats_logger().append(
+                            {
+                                "type": "word_event",
+                                "word": page.title,
+                                "event": "got_defns",
+                            }
+                        )
+                        results["defns"] = defns
+                if heads:
+                    results["heads"] = heads
+                if results:
+                    yield page.title, results
         finally:
             get_stats_logger().append({"type": "total_count", "count": total})
 
     makedirs(outdir, exist_ok=True)
     successful = 0
-    for lemma, defns in page_info(Dump.from_file(inf)):
+    for lemma, results in page_info(Dump.from_file(inf)):
         try:
-            if isinstance(defns, ExceptionWrapper):
+            if isinstance(results, ExceptionWrapper):
                 print("Error while processing {}.".format(lemma))
                 print("(Rank: {})".format(get_rank(lemma)))
                 try:
-                    defns.re_raise()
+                    results.re_raise()
                 except Exception:
                     traceback.print_exc(file=sys.stdout)
             else:
                 print("Success", lemma)
                 with open(pjoin(outdir, lemma), "w") as fp:
-                    ujson.dump(defns, fp)
+                    ujson.dump(results, fp)
             sys.stdout.flush()
             sys.stderr.flush()
             successful += 1
@@ -204,7 +244,7 @@ def process_dump(inf, outdir, sbf=None):
                 sys.stdout.write(".")
                 sys.stdout.flush()
         except:
-            print("Exception while processing", lemma, defns)
+            print("Exception while processing", lemma, results)
             raise
     print("Got {}".format(successful))
 

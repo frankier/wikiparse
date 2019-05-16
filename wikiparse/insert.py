@@ -1,5 +1,5 @@
 from wikiparse import tables
-from wikiparse.utils.db import insert_get_id
+from wikiparse.utils.db import insert_get_id, insert
 from typing import cast, Dict, List, Optional, TypeVar, Tuple, Iterator
 from .models import DictTree2L
 
@@ -13,7 +13,9 @@ def flatten(nested_senses, ety, prefix):
             yield prefix + "{}.{}".format(pos, sense_idx + 1), ety, pos, sense
 
 
-def flatten_senses(nested_senses: DictTree2L[List[T]]) -> Iterator[Tuple[str, int, str, T]]:
+def flatten_senses(
+    nested_senses: DictTree2L[List[T]]
+) -> Iterator[Tuple[str, int, str, T]]:
     if isinstance(next(iter(nested_senses.values())), list):
         nested_senses = cast(Dict[str, List[T]], nested_senses)
         yield from flatten(nested_senses, None, "")
@@ -24,10 +26,14 @@ def flatten_senses(nested_senses: DictTree2L[List[T]]) -> Iterator[Tuple[str, in
             yield from flatten(outer_senses, ety, etymology.replace(" ", "") + ".")
 
 
-def insert_defns(session, lemma_name: str, defns: DictTree2L[List[Dict]]) -> Tuple[Tuple[int, str], List[Tuple[int, Optional[Dict]]]]:
+def insert_defns(
+    session, lemma_name: str, defns: DictTree2L[List[Dict]]
+) -> Tuple[int, List[Tuple[int, Optional[Dict]]]]:
     morphs = []  # type: List[Tuple[int, Optional[Dict]]]
     headword_id = insert_get_id(session, tables.headword, name=lemma_name)
-    for full_id, ety, pos, sense in flatten_senses(defns):  # type: Tuple[str, int, str, Dict]
+    for full_id, ety, pos, sense in flatten_senses(
+        defns
+    ):  # type: Tuple[str, int, str, Dict]
         stripped_defn = sense["stripped_defn"]
         sense.pop("bi_examples", {})
         sense.pop("fi_examples", {})
@@ -48,28 +54,61 @@ def insert_defns(session, lemma_name: str, defns: DictTree2L[List[Dict]]) -> Tup
         if morph and morph.get("type") == "form":
             morphs.append((word_sense_id, morph))
 
-    return (headword_id, lemma_name), morphs
+    return headword_id, morphs
 
 
-def insert_morph(session, word_sense_id, morph, headword_id_map):
-    morph.pop("type")
-    lemma = morph.pop("lemma")
+def ensure_lemma(session, lemma, headword_id_map):
     if lemma in headword_id_map:
         lemma_id = headword_id_map[lemma]
     else:
         lemma_id = insert_get_id(session, tables.headword, name=lemma)
         headword_id_map[lemma] = lemma_id
+    return lemma_id
+
+
+def insert_morph(session, word_sense_id, morph, headword_id_map):
+    morph.pop("type")
+    lemma = morph.pop("lemma")
+    lemma_id = ensure_lemma(session, lemma, headword_id_map)
     inflection_of_id = insert_get_id(
-        session,
-        tables.inflection_of,
-        lemma_id=lemma_id,
-        inflection=morph,
+        session, tables.inflection_of, lemma_id=lemma_id, inflection=morph
     )
     session.execute(
-        tables.word_sense
-        .update()
+        tables.word_sense.update()
         .where(tables.word_sense.c.id == word_sense_id)
         .values(inflection_of_id=inflection_of_id)
+    )
+
+
+def insert_derivation(session, lemma: str, ety, headword_id_map):
+    lemma_id = ensure_lemma(session, lemma, headword_id_map)
+    derivation_id = insert_get_id(
+        session,
+        tables.derivation,
+        derived_id=lemma_id,
+        type=ety.pop("type"),
+        extra={"raw_frag": ety.pop("raw_frag")},
+    )
+    for bit in ety.pop("bits"):
+        child_lemma_id = ensure_lemma(session, bit, headword_id_map)
+        insert(
+            session,
+            tables.derivation_seg,
+            derivation_id=derivation_id,
+            derived_seg_id=child_lemma_id,
+        )
+
+
+def insert_relation(session, lemma: str, rel, headword_id_map):
+    lemma_id = ensure_lemma(session, lemma, headword_id_map)
+    parent_lemma_id = ensure_lemma(session, rel.pop("parent"), headword_id_map)
+    insert(
+        session,
+        tables.relation,
+        parent_id=parent_lemma_id,
+        child_id=lemma_id,
+        type=rel.pop("type"),
+        extra={"raw_frag": rel.pop("raw_frag")},
     )
 
 

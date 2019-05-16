@@ -2,13 +2,19 @@ import click
 import click_log
 import logging
 from pprint import pprint
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from wikiparse.parse import process_dump, parse_enwiktionary_page, get_finnish_words
-from wikiparse.insert import insert_defns, insert_morph
+from wikiparse.insert import (
+    insert_defns,
+    insert_derivation,
+    insert_morph,
+    insert_relation,
+)
 from wikiparse.stats_log import install_db_stats_logger
 from wikiparse.utils.db import batch_commit, get_session
 from wikiparse.utils import json_load
+from wikiparse.utils.std import IterDirOrTar
 
 
 @click.group()
@@ -42,18 +48,44 @@ def parse_file(filename):
 def insert_dir_inner(db, indir: str):
     headword_id_map = {}
     all_morphs = []  # type: List[Tuple[int, Optional[Dict]]]
+    all_heads = []  # type: List[Tuple[str, Dict[str, Any]]]
+
     with click.progressbar(IterDirOrTar(indir), label="Inserting defns") as words:
-        def defns_batch(wordf):
-            word, defns = json_load(wordf)
-            (headword_id, lemma_name), morphs = insert_defns(db, word, defns)
-            headword_id_map[lemma_name] = headword_id
-            all_morphs.extend(morphs)
+
+        def defns_batch(word_pair):
+            lemma_name, wordf = word_pair
+            results = json_load(wordf)
+            if "defns" in results:
+                defns = results["defns"]
+                headword_id, morphs = insert_defns(db, lemma_name, defns)
+                headword_id_map[lemma_name] = headword_id
+                all_morphs.extend(morphs)
+            if "heads" in results:
+                all_heads.extend(((lemma_name, head) for head in results["heads"]))
+
         batch_commit(db, words, defns_batch)
+
     with click.progressbar(all_morphs, label="Inserting inflections") as morphs:
+
         def morph_batch(id_morph):
             (word_sense_id, morph) = id_morph
             insert_morph(db, word_sense_id, morph, headword_id_map)
+
         batch_commit(db, morphs, morph_batch)
+
+    with click.progressbar(all_heads, label="Inserting heads") as heads:
+
+        def head_batch(lemma_head):
+            lemma, head = lemma_head
+            tag = head.pop("tag")
+            if tag == "etymology":
+                insert_derivation(db, lemma, head, headword_id_map)
+            elif tag == "relation":
+                insert_relation(db, lemma, head, headword_id_map)
+            else:
+                assert False
+
+        batch_commit(db, heads, head_batch)
 
 
 @parse.command()

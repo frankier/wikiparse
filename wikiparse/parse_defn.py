@@ -1,16 +1,14 @@
 import re
-from .models import DefnTreeFrag
 from mwparserfromhell.wikicode import Wikicode, Template
-from typing import cast, Any, List, Optional, Dict
-import logging
+from typing import Any, List, Optional, Dict, Iterator, Tuple
 from mwparserfromhell import parse
 from langdetect import detect_langs
 from langdetect.lang_detect_exception import LangDetectException
-from boltons.setutils import IndexedSet
 
 from dataclasses import asdict
-from wikiparse.utils.wikicode import double_strip, TextTreeNode, TextTreeList
-from .models import AssocBits, Defn, Example, TextTreeDictTree2L, DefnListDictTree2L
+from .utils.wikicode import double_strip, TextTreeNode, TextTreeList
+from .utils.iter import extract
+from .models import AssocBits, DefnTreeFrag, Defn, Example
 
 from .gram_words import (
     TRANSITIVITY,
@@ -26,9 +24,11 @@ from .exceptions import (
     UnknownStructureException,
     expect_only,
     get_strictness,
-    PERMISSIVE,
     EXTRA_STRICT,
 )
+from .template_data import FORM_TEMPLATES, DEFN_TEMPLATES, DERIV_TEMPLATES
+from .template_utils import template_matchers
+from .parse_ety import proc_defn_head_template
 
 EARLY_THRESH = 5
 BIT_STOPWORDS = [
@@ -41,17 +41,6 @@ OUR_LANGS = ("en", "fi")
 DEFN_TEMPLATE_START = re.compile(r"{{(lb|lbl|label)\|fi\|")
 BRACKET_RE = re.compile(r"\(.*\)")
 GRAMMAR_NOTE_RE = re.compile(r"\(.*({}).*\)".format("|".join(GRAMMAR_WORDS)))
-
-FI_2ND_TEMPLATES = {"ux", "lb"}
-LANG_PARAM_TEMPLATES = {"plural of"}
-FORM_TEMPLATES = {
-    ("fi-verb form of",),
-    ("plural of", "fi"),
-    ("fi-participle of",),
-    ("fi-infinitive of",),
-    ("fi-form of",),
-}
-DEFN_FORM_TEMPLATES = FORM_TEMPLATES | {("lb", "fi")}
 
 
 def has_grammar_word(txt: str) -> bool:
@@ -251,21 +240,7 @@ def block_templates(contents: Wikicode) -> List[Template]:
     return [t for t in contents.filter_templates() if t.name not in INLINE_TEMPLATES]
 
 
-def template_matcher(template):
-    name = str(template.name)
-    if name in LANG_PARAM_TEMPLATES:
-        return (name, str(template.get("lang").value))
-    elif name in FI_2ND_TEMPLATES:
-        return (name, str(template.get(1)))
-    else:
-        return (name,)
-
-
-def template_matchers(templates):
-    return IndexedSet((template_matcher(template) for template in templates))
-
-
-def proc_form_template(tmpl: Template):
+def proc_defn_form_template(tmpl: Template):
     name = str(tmpl.name)
     form_gram = {"type": "form", "template": name}
     if name == "plural of":
@@ -280,14 +255,9 @@ def proc_form_template(tmpl: Template):
 
 
 def proc_sense(
-    contents: Wikicode,
-    children_result: DefnTreeFrag,
-    form_template: Optional[Template] = None,
+    contents: Wikicode, children_result: DefnTreeFrag, morph_dict: Optional[Dict] = None
 ) -> DefnTreeFrag:
     result = DefnTreeFrag()
-    morph_dict = None
-    if form_template is not None:
-        morph_dict = proc_form_template(form_template)
     # Sense
     # multiple senses
     defns = contents.split(";")
@@ -412,30 +382,40 @@ def proc_example(
     return result
 
 
-def get_senses_and_examples_defn(defn: TextTreeNode, level: int) -> DefnTreeFrag:
-    children_result = get_senses_and_examples(defn.children, level + 1)
+def get_senses_and_examples_defn(
+    defn: TextTreeNode, level: int
+) -> Iterator[Tuple[str, Any]]:
+    to_propagate, children_result = extract(
+        get_senses_and_examples(defn.children, level + 1),
+        lambda elem: elem[0] == "frag",
+    )
+    yield from to_propagate
+    children_result = children_result[0][1]
     contents = defn.contents
     flatten_templates(contents)
     templates = block_templates(contents)
     t_match = template_matchers(templates)
     is_lb_template = False
     is_ux_template = False
-    is_form_template = False
-    form_template = None
+    morph_dict = None
     ux_template = None
     if not t_match:
         # No template
         pass
-    elif t_match.issubset(DEFN_FORM_TEMPLATES):
+    elif t_match.issubset(DEFN_TEMPLATES):
         is_lb_template = True
-        form_templates_matches = t_match.intersection(FORM_TEMPLATES)
+        form_templates_matches = t_match.intersection(FORM_TEMPLATES | DERIV_TEMPLATES)
         if form_templates_matches:
             if len(form_templates_matches) > 1:
                 unknown_structure(
                     "multiple-form-tmpls", repr(list(form_templates_matches))
                 )
-            is_form_template = True
             form_template = templates[t_match.index(form_templates_matches[0])]
+            # Get etys for adding to headword
+            yield from proc_defn_head_template(form_template)
+            # Put form stuff on defns
+            if form_templates_matches.intersection(FORM_TEMPLATES):
+                morph_dict = proc_defn_form_template(form_template)
     elif t_match.issubset({("ux", "fi")}):
         is_ux_template = True
         ux_template = templates[0]
@@ -443,50 +423,37 @@ def get_senses_and_examples_defn(defn: TextTreeNode, level: int) -> DefnTreeFrag
         unknown_structure("not-ux-lb", ", ".join([repr(m) for m in t_match]))
     is_sense = level == 0 or detect_sense(str(contents)) or is_lb_template
     if is_sense and not is_ux_template:
-        if is_form_template:
-            return proc_sense(contents, children_result, form_template)
-        else:
-            return proc_sense(contents, children_result)
+        yield "frag", proc_sense(contents, children_result, morph_dict)
     else:
         if is_ux_template:
-            return proc_example(contents, children_result, ux_template)
+            yield "frag", proc_example(contents, children_result, ux_template)
         else:
-            return proc_example(contents, children_result)
+            yield "frag", proc_example(contents, children_result)
 
 
-def get_senses_and_examples(nested_list: TextTreeList, level: int) -> DefnTreeFrag:
+def get_senses_and_examples(
+    nested_list: TextTreeList, level: int
+) -> Iterator[Tuple[str, Any]]:
     result = DefnTreeFrag()
     for defn in nested_list:
         try:
-            result.merge(get_senses_and_examples_defn(defn, level))
-        except UnknownStructureException as e:
-            e.add_info(defn)
-            if get_strictness() == PERMISSIVE:
-                logging.exception("Ignored since in permissive mode: %s", defn)
-            else:
-                raise e
+            for act, payload in get_senses_and_examples_defn(defn, level):
+                if act == "frag":
+                    result.merge(payload)
+                else:
+                    yield act, payload
+        except UnknownStructureException as exc:
+            exc.add_info(defn)
+            yield "exception", exc
         except Exception as e:
             print("Exception caused by ", defn)
             raise e
-    return result
+    yield "frag", result
 
 
-def get_senses(nested_list: TextTreeList) -> List[Defn]:
-    return get_senses_and_examples(nested_list, 0).senses
-
-
-def map_tree_to_senses(defn_lists: TextTreeDictTree2L) -> DefnListDictTree2L:
-    if defn_lists:
-        if isinstance(next(iter(defn_lists.values())), list):
-            defn_lists = cast(Dict[str, TextTreeList], defn_lists)
-            return {pos: get_senses(defn_list) for pos, defn_list in defn_lists.items()}
+def get_senses(nested_list: TextTreeList) -> Iterator[Tuple[str, Any]]:
+    for act, payload in get_senses_and_examples(nested_list, 0):
+        if act == "frag":
+            yield "defn", payload.senses
         else:
-            defn_lists = cast(Dict[str, Dict[str, TextTreeList]], defn_lists)
-            return {
-                ety: {
-                    pos: get_senses(defn_list) for pos, defn_list in defn_dict.items()
-                }
-                for ety, defn_dict in defn_lists.items()
-            }
-    empty_dict: Dict[str, List[Defn]] = {}
-    return empty_dict
+            yield act, payload

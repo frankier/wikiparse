@@ -1,13 +1,28 @@
 from __future__ import annotations
 
+import enum
 from typing import List, Optional, TypeVar, Dict, Union
 from dataclasses import asdict, dataclass, field, fields
 from wikiparse.utils.wikicode import TextTreeList
 
 
-class JsonMixin:
-    def __json__(self):
-        return asdict(self)
+class DerivationType(enum.Enum):
+    unknown = 0
+    inflection = 1
+    derivation = 2
+    compound = 3
+    mwe = 4
+    multiple = 5
+
+
+class RelationType(enum.Enum):
+    unknown = 0
+    synonym = 1
+    antonym = 2
+    relevant = 3
+    alt_form = 4
+    misspelling = 5
+    abbrv = 6
 
 
 Self = TypeVar("Self")
@@ -61,6 +76,30 @@ class DefnTreeFrag(MergeMixin):
     en_examples: List[Example] = field(default_factory=list)
     bi_examples: List[Example] = field(default_factory=list)
     unk_examples: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Etymology:
+    type: DerivationType
+    bits: List[str]
+    raw_frag: str
+
+    def tagged_dict(self):
+        d = asdict(self)
+        d["tag"] = "etymology"
+        return d
+
+
+@dataclass
+class Relation:
+    type: RelationType
+    parent: str
+    raw_frag: str
+
+    def tagged_dict(self):
+        d = asdict(self)
+        d["tag"] = "relation"
+        return d
 
 
 T = TypeVar("T")
