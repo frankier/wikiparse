@@ -1,1 +1,1 @@
-poetry run mypy wikiparse parse.py
+poetry run mypy wikiparse parse.py test
