@@ -37,7 +37,12 @@ DERIV_TEMPLATES = {
     ("agent noun of", "fi"),
 }
 
-ETY_ONLY_DERIV_TEMPLATES = {("prefix", "fi"), ("suffix", "fi"), ("affix", "fi"), ("compound", "fi")}
+ETY_ONLY_DERIV_TEMPLATES = {
+    ("prefix", "fi"),
+    ("suffix", "fi"),
+    ("affix", "fi"),
+    ("compound", "fi"),
+}
 
 REL_TEMPLATES = {
     ("synonym of", "fi"),
