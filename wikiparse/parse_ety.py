@@ -10,7 +10,7 @@ from .utils.iter import orelse
 
 def proc_ety_only_derivation_template(template: Template):
     template_name = str(template.name)
-    if template_name in ("prefix", "suffix", "compound"):
+    if template_name in ("prefix", "suffix", "affix", "compound"):
         # e.g. {{suffix|fi|ajaa|ja}}
         # e.g. {{compound|fi|toimi|alt1=toimeen|tulo}}.
         """
