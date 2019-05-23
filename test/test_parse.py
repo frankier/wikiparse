@@ -78,3 +78,13 @@ def test_vuotta_head_gram():
     assert ety1_form and ety1_form["case"] == "abessive"
     ety2_form = defns["Etymology 2"]["Noun"][0].morph
     assert ety2_form and ety2_form["case"] == "partitive"
+
+
+def test_aivojuovio_head_affix():
+    defns, heads = parse_enwiktionary_page("aivojuovio", read_data("aivojuovio"))
+    found = 0
+    for head in heads:
+        if head["tag"] == "etymology":
+            found += 1
+            assert head["bits"] == ["aivo", "juova", "-io"]
+    assert found == 1
