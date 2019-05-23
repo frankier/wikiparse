@@ -1,7 +1,7 @@
 from wikiparse import tables
 from wikiparse.utils.db import insert_get_id, insert
 from typing import cast, Dict, List, Optional, TypeVar, Tuple, Iterator
-from .models import DictTree2L
+from .models import DictTree2L, DerivationType, RelationType
 
 
 T = TypeVar("T")
@@ -86,7 +86,7 @@ def insert_derivation(session, lemma: str, ety, headword_id_map):
         session,
         tables.derivation,
         derived_id=lemma_id,
-        type=ety.pop("type"),
+        type=DerivationType(ety.pop("type")["value"]),
         extra={"raw_frag": ety.pop("raw_frag")},
     )
     for bit in ety.pop("bits"):
@@ -107,7 +107,7 @@ def insert_relation(session, lemma: str, rel, headword_id_map):
         tables.relation,
         parent_id=parent_lemma_id,
         child_id=lemma_id,
-        type=rel.pop("type"),
+        type=RelationType(rel.pop("type")["value"]),
         extra={"raw_frag": rel.pop("raw_frag")},
     )
 
