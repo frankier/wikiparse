@@ -23,7 +23,7 @@ def test_parse_min_results(entry):
     """
     Smoke test to check parsing returns a minimum number of definitions.
     """
-    defns = parse_enwiktionary_page(entry, read_data(entry))
+    defns, _heads = parse_enwiktionary_page(entry, read_data(entry))
 
     got_senses = len(list(flatten_senses(defns)))
     min_senses = MIN_LENGTHS[entry]
@@ -35,7 +35,7 @@ def test_parse_min_results(entry):
 @params("ja", "humalassa", "on", "kertoa", "tulla")
 def test_parse_no_exceptions(entry):
     with strictness(EXTRA_STRICT):
-        parse_enwiktionary_page(entry, read_data(entry))
+        parse_enwiktionary_page(entry, read_data(entry), skip_ety=True)
 
 
 TULLA_LIST = """
@@ -73,7 +73,7 @@ def test_parse_nested_list_tulla():
 
 
 def test_vuotta_head_gram():
-    defns = parse_enwiktionary_page("vuotta", read_data("vuotta"))
+    defns, _heads = parse_enwiktionary_page("vuotta", read_data("vuotta"))
     ety1_form = defns["Etymology 1"]["Noun"][0].morph
     assert ety1_form and ety1_form["case"] == "abessive"
     ety2_form = defns["Etymology 2"]["Noun"][0].morph

@@ -36,7 +36,7 @@ DetectorFactory.seed = 0
 
 
 def handle_pos_sections(
-    sections: List[Wikicode]
+    sections: List[Wikicode], skip_ety: bool = False
 ) -> Iterator[Tuple[str, Tuple[str, ...], Any]]:
     """
     Takes a list of sections and yield tagged, pathed, parsed fragments are
@@ -45,7 +45,7 @@ def handle_pos_sections(
     for def_section in sections:
         str_def_title = str(get_heading(def_section)).strip()
         try:
-            if str_def_title == "Etymology":
+            if str_def_title == "Etymology" and not skip_ety:
                 def_section.remove(def_section.get(0))
                 etymology = get_lead(def_section)
                 for act, payload in get_ety(etymology):
@@ -64,7 +64,7 @@ def handle_pos_sections(
 
 
 def handle_etymology_sections(
-    sections: List[Wikicode]
+    sections: List[Wikicode], skip_ety: bool = False
 ) -> Iterator[Tuple[str, Tuple[str, ...], Any]]:
     """
     Takes a list of sections and yield tagged, pathed, parsed fragments are
@@ -74,12 +74,14 @@ def handle_etymology_sections(
         str_def_title = str(get_heading(def_section))
         if str_def_title.startswith("Etymology "):
             for act, path, payload in handle_pos_sections(
-                def_section.get_sections(levels=[4])
+                def_section.get_sections(levels=[4]), skip_ety=skip_ety
             ):
                 yield act, (str_def_title,) + path, payload
 
 
-def parse_enwiktionary_page(lemma: str, content: str) -> Tuple[Dict, List[Any]]:
+def parse_enwiktionary_page(
+    lemma: str, content: str, skip_ety: bool = False
+) -> Tuple[Dict, List[Any]]:
     set_curword(lemma)
     parsed = parse(content, skip_style_tags=True)
     defn_lists: Dict = {}
@@ -89,8 +91,12 @@ def parse_enwiktionary_page(lemma: str, content: str) -> Tuple[Dict, List[Any]]:
         if lang_title != "Finnish":
             continue
         for act, path, payload in orelse(
-            handle_etymology_sections(lang_section.get_sections(levels=[3])),
-            handle_pos_sections(lang_section.get_sections(levels=[3])),
+            handle_etymology_sections(
+                lang_section.get_sections(levels=[3]), skip_ety=skip_ety
+            ),
+            handle_pos_sections(
+                lang_section.get_sections(levels=[3]), skip_ety=skip_ety
+            ),
         ):
             if act == "defn":
                 if len(path) == 1:
