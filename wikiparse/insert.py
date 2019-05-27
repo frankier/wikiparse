@@ -2,6 +2,7 @@ from wikiparse import tables
 from wikiparse.utils.db import insert_get_id, insert
 from typing import cast, Dict, List, Optional, TypeVar, Tuple, Iterator
 from .models import DictTree2L, DerivationType, RelationType
+from .parse import get_ety_idx
 
 
 T = TypeVar("T")
@@ -22,7 +23,7 @@ def flatten_senses(
     else:
         nested_senses = cast(Dict[str, Dict[str, List[T]]], nested_senses)
         for etymology, outer_senses in nested_senses.items():
-            ety = int(etymology.split(" ")[-1])
+            ety = get_ety_idx(etymology)
             yield from flatten(outer_senses, ety, etymology.replace(" ", "") + ".")
 
 
@@ -80,23 +81,31 @@ def insert_morph(session, word_sense_id, morph, headword_id_map):
     )
 
 
-def insert_derivation(session, lemma: str, ety, headword_id_map):
+def insert_ety_head(session, lemma: str, ety_head, headword_id_map):
     lemma_id = ensure_lemma(session, lemma, headword_id_map)
-    derivation_id = insert_get_id(
+    ety_head_id = insert_get_id(
         session,
-        tables.derivation,
-        derived_id=lemma_id,
-        type=DerivationType(ety.pop("type")["value"]),
-        extra={"raw_frag": ety.pop("raw_frag")},
+        tables.etymology,
+        etymology_index=ety_head.pop("ety_idx"),
+        headword_id=lemma_id,
     )
-    for bit in ety.pop("bits"):
-        child_lemma_id = ensure_lemma(session, bit, headword_id_map)
-        insert(
+    etys = ety_head.pop("etys")
+    for ety in etys:
+        derivation_id = insert_get_id(
             session,
-            tables.derivation_seg,
-            derivation_id=derivation_id,
-            derived_seg_id=child_lemma_id,
+            tables.derivation,
+            etymology_id=ety_head_id,
+            type=DerivationType(ety.pop("type")["value"]),
+            extra={"raw_frag": ety.pop("raw_frag")},
         )
+        for bit in ety.pop("bits"):
+            child_lemma_id = ensure_lemma(session, bit, headword_id_map)
+            insert(
+                session,
+                tables.derivation_seg,
+                derivation_id=derivation_id,
+                derived_seg_id=child_lemma_id,
+            )
 
 
 def insert_relation(session, lemma: str, rel, headword_id_map):

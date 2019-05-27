@@ -1,4 +1,5 @@
 import os
+import re
 from os.path import join as pjoin
 from wikiparse.insert import flatten_senses
 from wikiparse.parse import parse_enwiktionary_page
@@ -80,11 +81,21 @@ def test_vuotta_head_gram():
     assert ety2_form and ety2_form["case"] == "partitive"
 
 
-def test_aivojuovio_head_affix():
-    defns, heads = parse_enwiktionary_page("aivojuovio", read_data("aivojuovio"))
+@params(
+    ("ammattikorkeakoulu", "ammatti-?", "korkeakoulu"),
+    ("voima", "voi", "-?ma"),
+    ("aivojuovio", "aivo", "juova", "-?io")
+)
+def test_compound_fi(compound, *subwords):
+    defns, heads = parse_enwiktionary_page(compound, read_data(compound))
     found = 0
     for head in heads:
-        if head["tag"] == "etymology":
-            found += 1
-            assert head["bits"] == ["aivo", "juova", "-io"]
+        if head["tag"] != "etymology-heading":
+            continue
+        assert head["ety_idx"] == None
+        assert len(head["etys"]) == 1
+        assert len(head["etys"][0]["bits"]) == len(subwords)
+        for bit, subword in zip(head["etys"][0]["bits"], subwords):
+            assert re.match(subword, bit)
+        found += 1
     assert found == 1

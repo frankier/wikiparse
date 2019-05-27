@@ -23,6 +23,7 @@ from wikiparse.stats_log import get_stats_logger, set_curword
 from .gram_words import POS
 from .parse_defn import get_senses
 from .parse_ety import get_ety
+from .models import EtymologyHeading
 from .exceptions import (
     ExceptionWrapper,
     UnknownStructureException,
@@ -33,6 +34,10 @@ from .utils.iter import orelse
 
 tblib.pickling_support.install()
 DetectorFactory.seed = 0
+
+
+def get_ety_idx(etymology):
+    return int(etymology.split(" ")[-1])
 
 
 def handle_pos_sections(
@@ -73,10 +78,15 @@ def handle_etymology_sections(
     for def_section in sections:
         str_def_title = str(get_heading(def_section))
         if str_def_title.startswith("Etymology "):
+            etys = []
             for act, path, payload in handle_pos_sections(
                 def_section.get_sections(levels=[4]), skip_ety=skip_ety
             ):
-                yield act, (str_def_title,) + path, payload
+                if act == "ety-head":
+                    etys.append(payload)
+                else:
+                    yield act, (str_def_title,) + path, payload
+            yield "ety-sec-head", (str_def_title,), EtymologyHeading(get_ety_idx(str_def_title), etys)
 
 
 def parse_enwiktionary_page(
@@ -86,6 +96,8 @@ def parse_enwiktionary_page(
     parsed = parse(content, skip_style_tags=True)
     defn_lists: Dict = {}
     heads = []
+    got_ety_sec_head = False
+    etys = []
     for lang_section in parsed.get_sections(levels=[2]):
         lang_title = get_heading(lang_section)
         if lang_title != "Finnish":
@@ -105,6 +117,11 @@ def parse_enwiktionary_page(
                     defn_lists.setdefault(path[0], {})[path[1]] = payload
                 else:
                     raise
+            elif act == "ety-head":
+                etys.append(payload)
+            elif act == "ety-sec-head":
+                got_ety_sec_head = True
+                heads.append(payload.tagged_dict())
             elif act == "head":
                 heads.append(payload.tagged_dict())
             elif act == "exception":
@@ -119,6 +136,8 @@ def parse_enwiktionary_page(
                     get_stats_logger().append(loggable)
             else:
                 raise
+    if not got_ety_sec_head:
+        heads.append(EtymologyHeading(None, etys).tagged_dict())
     return defn_lists, heads
 
 

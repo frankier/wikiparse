@@ -79,15 +79,21 @@ class DefnTreeFrag(MergeMixin):
 
 
 @dataclass
+class EtymologyHeading:
+    ety_idx: Optional[int]
+    etys: List[Etymology]
+
+    def tagged_dict(self):
+        d = asdict(self)
+        d["tag"] = "etymology-heading"
+        return d
+
+
+@dataclass
 class Etymology:
     type: DerivationType
     bits: List[str]
     raw_frag: str
-
-    def tagged_dict(self):
-        d = asdict(self)
-        d["tag"] = "etymology"
-        return d
 
 
 @dataclass

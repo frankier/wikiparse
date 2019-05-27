@@ -47,13 +47,13 @@ def proc_ety_only_derivation_template(template: Template):
             alt_param_name = "alt{}".format(param_num)
             norm_param_num = param_num + 1
             if template.has(alt_param_name):
-                bit = str(template.get(param_num))
+                bit = str(template.get(alt_param_name).value)
             elif lang_template_has(template, norm_param_num):
                 bit = str(lang_template_get(template, norm_param_num))
             else:
                 break
             bits.append(bit)
-        yield "head", Etymology(
+        yield "ety-head", Etymology(
             DerivationType.compound
             if template_name == "compound"
             else DerivationType.derivation,
@@ -67,7 +67,7 @@ def proc_anywhere_derivation_template(template: Template):
     if template_name in ("comparative of", "superlative of", "agent noun of"):
         # e.g. {{comparative of|banaalisti|POS=adverb|lang=fi}}
         # {{superlative of|banaalisti|POS=adverb|lang=fi}}
-        yield "head", Etymology(
+        yield "ety-head", Etymology(
             DerivationType.derivation,
             [str(lang_template_get(template, 2)), TEMPLATE_NORMSEG_MAP[template_name]],
             str(template),
@@ -116,7 +116,7 @@ def proc_form_template(template: Template):
             child = str(lang_template_get(template, 2))
         else:
             child = str(template.get(1))
-        yield "head", Etymology(
+        yield "ety-head", Etymology(
             DerivationType.inflection, [child, "-inflection"], str(template)
         )
 

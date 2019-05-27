@@ -19,11 +19,19 @@ inflection_of = Table(
     Column("inflection", JSON, nullable=False),
 )
 
+etymology = Table(
+    "etymology",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("etymology_index", Integer, nullable=True),
+    Column("headword_id", Integer, ForeignKey("headword.id"), nullable=False),
+)
+
 derivation = Table(
     "derivation",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("derived_id", Integer, ForeignKey("headword.id"), nullable=False),
+    Column("etymology_id", Integer, ForeignKey("etymology.id"), nullable=False),
     Column("type", Enum(DerivationType), nullable=False),
     Column("extra", JSON, nullable=False),
 )

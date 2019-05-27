@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from wikiparse.parse import process_dump, parse_enwiktionary_page, get_finnish_words
 from wikiparse.insert import (
     insert_defns,
-    insert_derivation,
+    insert_ety_head,
     insert_morph,
     insert_relation,
 )
@@ -78,8 +78,8 @@ def insert_dir_inner(db, indir: str):
         def head_batch(lemma_head):
             lemma, head = lemma_head
             tag = head.pop("tag")
-            if tag == "etymology":
-                insert_derivation(db, lemma, head, headword_id_map)
+            if tag == "etymology-heading":
+                insert_ety_head(db, lemma, head, headword_id_map)
             elif tag == "relation":
                 insert_relation(db, lemma, head, headword_id_map)
             else:
