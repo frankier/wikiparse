@@ -17,6 +17,15 @@ def create():
 
 
 @db.command()
+def recreate():
+    session = get_session()
+    engine = session().get_bind().engine
+    metadata.reflect(bind=engine)
+    metadata.drop_all(engine)
+    metadata.create_all(engine)
+
+
+@db.command()
 def trunc():
     session = get_session()
 
