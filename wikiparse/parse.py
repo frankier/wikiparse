@@ -86,7 +86,9 @@ def handle_etymology_sections(
                     etys.append(payload)
                 else:
                     yield act, (str_def_title,) + path, payload
-            yield "ety-sec-head", (str_def_title,), EtymologyHeading(get_ety_idx(str_def_title), etys)
+            yield "ety-sec-head", (str_def_title,), EtymologyHeading(
+                get_ety_idx(str_def_title), etys
+            )
 
 
 def parse_enwiktionary_page(

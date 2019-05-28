@@ -121,7 +121,9 @@ def proc_form_template(template: Template):
         else:
             child = str(template.get(1))
         yield "ety-head", Etymology(
-            DerivationType.inflection, [EtymologyBit(headword=child), EtymologyBit(headword="-inflection")], str(template)
+            DerivationType.inflection,
+            [EtymologyBit(headword=child), EtymologyBit(headword="-inflection")],
+            str(template),
         )
 
 

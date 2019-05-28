@@ -84,7 +84,7 @@ def test_vuotta_head_gram():
 @params(
     ("ammattikorkeakoulu", "ammatti", "korkeakoulu"),
     ("voima", "voida", "-?ma"),
-    ("aivojuovio", "aivo", "juova", "-?io")
+    ("aivojuovio", "aivo", "juova", "-?io"),
 )
 def test_compound_fi(compound, *subwords):
     defns, heads = parse_enwiktionary_page(compound, read_data(compound))
