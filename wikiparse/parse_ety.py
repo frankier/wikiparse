@@ -3,7 +3,7 @@ from mwparserfromhell.wikicode import Wikicode, Template
 from .exceptions import mk_unknown_structure
 from .template_data import ALL_DERIV_TEMPLATES
 from .template_utils import template_matchers, lang_template_has, lang_template_get
-from .models import DerivationType, Etymology, RelationType, Relation
+from .models import DerivationType, Etymology, EtymologyBit, RelationType, Relation
 from .normseg_data import TEMPLATE_NORMSEG_MAP
 from .utils.iter import orelse
 
@@ -46,13 +46,14 @@ def proc_ety_only_derivation_template(template: Template):
         for param_num in count(1):
             alt_param_name = "alt{}".format(param_num)
             norm_param_num = param_num + 1
-            if template.has(alt_param_name):
-                bit = str(template.get(alt_param_name).value)
-            elif lang_template_has(template, norm_param_num):
-                bit = str(lang_template_get(template, norm_param_num))
+            bit = {}
+            if lang_template_has(template, norm_param_num):
+                bit["headword"] = str(lang_template_get(template, norm_param_num))
             else:
                 break
-            bits.append(bit)
+            if template.has(alt_param_name):
+                bit["alt"] = str(template.get(alt_param_name).value)
+            bits.append(EtymologyBit(**bit))
         yield "ety-head", Etymology(
             DerivationType.compound
             if template_name == "compound"
@@ -69,7 +70,10 @@ def proc_anywhere_derivation_template(template: Template):
         # {{superlative of|banaalisti|POS=adverb|lang=fi}}
         yield "ety-head", Etymology(
             DerivationType.derivation,
-            [str(lang_template_get(template, 2)), TEMPLATE_NORMSEG_MAP[template_name]],
+            [
+                EtymologyBit(headword=str(lang_template_get(template, 2))),
+                EtymologyBit(headword=TEMPLATE_NORMSEG_MAP[template_name]),
+            ],
             str(template),
         )
 
@@ -117,7 +121,7 @@ def proc_form_template(template: Template):
         else:
             child = str(template.get(1))
         yield "ety-head", Etymology(
-            DerivationType.inflection, [child, "-inflection"], str(template)
+            DerivationType.inflection, [EtymologyBit(headword=child), EtymologyBit(headword="-inflection")], str(template)
         )
 
 

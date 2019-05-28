@@ -90,9 +90,15 @@ class EtymologyHeading:
 
 
 @dataclass
+class EtymologyBit:
+    headword: str
+    alt: Optional[str] = None
+
+
+@dataclass
 class Etymology:
     type: DerivationType
-    bits: List[str]
+    bits: List[EtymologyBit]
     raw_frag: str
 
 

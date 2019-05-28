@@ -42,6 +42,7 @@ derivation_seg = Table(
     Column("id", Integer, primary_key=True),
     Column("derivation_id", Integer, ForeignKey("derivation.id"), nullable=False),
     Column("derived_seg_id", Integer, ForeignKey("headword.id"), nullable=False),
+    Column("alt", String),
 )
 
 relation = Table(

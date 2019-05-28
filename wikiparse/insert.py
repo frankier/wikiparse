@@ -99,12 +99,13 @@ def insert_ety_head(session, lemma: str, ety_head, headword_id_map):
             extra={"raw_frag": ety.pop("raw_frag")},
         )
         for bit in ety.pop("bits"):
-            child_lemma_id = ensure_lemma(session, bit, headword_id_map)
+            child_lemma_id = ensure_lemma(session, bit["headword"], headword_id_map)
             insert(
                 session,
                 tables.derivation_seg,
                 derivation_id=derivation_id,
                 derived_seg_id=child_lemma_id,
+                alt=bit["alt"],
             )
 
 

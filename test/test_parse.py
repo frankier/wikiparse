@@ -82,8 +82,8 @@ def test_vuotta_head_gram():
 
 
 @params(
-    ("ammattikorkeakoulu", "ammatti-?", "korkeakoulu"),
-    ("voima", "voi", "-?ma"),
+    ("ammattikorkeakoulu", "ammatti", "korkeakoulu"),
+    ("voima", "voida", "-?ma"),
     ("aivojuovio", "aivo", "juova", "-?io")
 )
 def test_compound_fi(compound, *subwords):
@@ -96,6 +96,6 @@ def test_compound_fi(compound, *subwords):
         assert len(head["etys"]) == 1
         assert len(head["etys"][0]["bits"]) == len(subwords)
         for bit, subword in zip(head["etys"][0]["bits"], subwords):
-            assert re.match(subword, bit)
+            assert re.match(subword, bit["headword"])
         found += 1
     assert found == 1
