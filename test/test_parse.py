@@ -92,7 +92,7 @@ def test_compound_fi(compound, *subwords):
     for head in heads:
         if head["tag"] != "etymology-heading":
             continue
-        assert head["ety_idx"] == None
+        assert head["ety_idx"] is None
         assert len(head["etys"]) == 1
         assert len(head["etys"][0]["bits"]) == len(subwords)
         for bit, subword in zip(head["etys"][0]["bits"], subwords):
