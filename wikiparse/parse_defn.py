@@ -2,60 +2,21 @@ import re
 from mwparserfromhell.wikicode import Wikicode, Template
 from typing import Any, List, Optional, Dict, Iterator, Tuple
 from mwparserfromhell import parse
-from langdetect import detect_langs
-from langdetect.lang_detect_exception import LangDetectException
 
 from dataclasses import asdict
-from .utils.wikicode import double_strip, TextTreeNode, TextTreeList
+from .utils.wikicode import double_strip, TextTreeNode, TextTreeList, block_templates
 from .utils.iter import extract
-from .models import AssocBits, DefnTreeFrag, Defn, Example
+from .utils.nlp import detect_fi_en, has_grammar_word, BRACKET_RE
+from .models import DefnTreeFrag, Defn, Example
 
-from .gram_words import (
-    TRANSITIVITY,
-    PERSONAL,
-    VERB_WORDS,
-    VERB_TO_NOMINAL,
-    NOMINAL_WORDS,
-    GRAMMAR_WORDS,
-    grammar_word_tokeniser,
-)
-from .exceptions import (
-    unknown_structure,
-    UnknownStructureException,
-    expect_only,
-    get_strictness,
-    EXTRA_STRICT,
-)
+from .exceptions import unknown_structure, UnknownStructureException, expect_only
 from .template_data import FORM_TEMPLATES, DEFN_TEMPLATES, DERIV_TEMPLATES
 from .template_utils import template_matchers
+from .parse_assoc import proc_lb_template_assoc, proc_text_assoc, mk_assoc_bits
 from .parse_ety import proc_defn_head_template
 
 EARLY_THRESH = 5
-BIT_STOPWORDS = [
-    "in",
-    # XXX: should capture information about this
-    "or",
-]
-INLINE_TEMPLATES = ["link", "l", "mention", "m", "qualifier"]
-OUR_LANGS = ("en", "fi")
 DEFN_TEMPLATE_START = re.compile(r"{{(lb|lbl|label)\|fi\|")
-BRACKET_RE = re.compile(r"\(.*\)")
-GRAMMAR_NOTE_RE = re.compile(r"\(.*({}).*\)".format("|".join(GRAMMAR_WORDS)))
-
-
-def has_grammar_word(txt: str) -> bool:
-    return any(grammar_word in txt for grammar_word in GRAMMAR_WORDS)
-
-
-def detect_fi_en(content: str) -> Optional[str]:
-    try:
-        langs = detect_langs(content)
-    except LangDetectException:
-        return None
-    for lang in langs:
-        if lang.lang in OUR_LANGS:
-            return lang.lang
-    return None
 
 
 def detect_sense(contents: str) -> bool:
@@ -80,147 +41,33 @@ def detect_new_sense(contents: str) -> bool:
     return False
 
 
-def tokenise_grammar_words(bit: str) -> List[str]:
-    bit_tokens = bit.split()
-    return grammar_word_tokeniser.tokenize(bit_tokens)
-
-
-def parse_bit(bit: str, prefer_subj=False, prefer_nom=False) -> AssocBits:
-    result = AssocBits()
-    bit = parse(bit.strip("'")).strip_code()
-    if bit in NOMINAL_WORDS or bit in (VERB_WORDS + VERB_TO_NOMINAL) and prefer_nom:
-        if prefer_subj:
-            result.subj.append(bit)
-        else:
-            result.obj.append(bit)
-    elif bit in VERB_WORDS:
-        result.verb.append(bit)
-    else:
-        bit_tokens = tokenise_grammar_words(bit)
-        for sw in BIT_STOPWORDS:
-            if sw in bit_tokens:
-                bit_tokens.remove(sw)
-        bit = " ".join(bit_tokens)
-        if ";" in bit:
-            bits = bit.split(";")
-            for bit in bits:
-                result.merge(parse_bit(bit.strip()))
-        elif len(bit_tokens) > 1:
-            # XXX: This is far too aggressive. Luckily the last case should
-            # catch most problems
-            prefer_nom = any(vtn in bit_tokens for vtn in VERB_TO_NOMINAL)
-            for bit in bit_tokens:
-                result.merge(parse_bit(bit, prefer_nom=prefer_nom))
-        elif bit == "~":
-            # XXX: This could have useful positional information, but for now
-            # we just throw it away
-            pass
-        elif bit:
-            detected = detect_fi_en(bit)
-            if detected == "en":
-                unknown_structure("eng-assoc", str(bit))
-            if detected != "fi":
-                unknown_structure("non-fin-assoc", str(bit))
-            result.assoc.append(bit)
-    return result
-
-
-def parse_assoc_bits(txt: str) -> AssocBits:
-    result = AssocBits()
-    bits = txt.split("+")
-    first = True
-    for bit in bits:
-        bit = bit.strip().strip("'").strip()
-        result.merge(parse_bit(bit, prefer_subj=first))
-        first = False
-    return result
-
-
-# def remove_extra_words(txt):
-# return txt.replace('in ', '').strip()
-
-
-def parse_bit_or_bits(bit: str) -> AssocBits:
-    if "+" in bit:
-        return parse_assoc_bits(bit)
-    else:
-        return parse_bit(bit)
-
-
-def filter_lb_template(templates):
-    filtered = [template for template in templates if template.name == "lb"]
-    if filtered:
-        assert len(filtered) == 1
-        return filtered[0]
-    return None
-
-
 def get_defn_info(defn: str) -> Defn:
     raw_defn = defn
     parsed_defn = parse(defn)
     defn_dirty = False
     templates = block_templates(parsed_defn)
-    lb_template = filter_lb_template(templates)
-    assoc = AssocBits()
-    if lb_template:
-        for idx, param in enumerate(lb_template.params[1:]):
-            if param == "_":
-                continue
-
-            if param in (TRANSITIVITY + PERSONAL):
-                assoc.verb.append(str(param))
-            elif "+" in param:
-                assoc.merge(parse_assoc_bits(param))
-            else:
-                assoc.qualifiers.append(str(param))
+    assoc_cmds: List[Tuple[str, Any]] = []
+    assoc_cmds.extend(proc_lb_template_assoc(templates))
     for template in templates:
         parsed_defn.remove(template)
         defn_dirty = True
     for template in parsed_defn.filter_templates():
         if template.name != "qualifier":
             continue
-        assoc.qualifiers.append(str(template.get(1)))
+        assoc_cmds.append(("qualifiers", str(template.get(1))))
         parsed_defn.remove(template)
         defn_dirty = True
     if defn_dirty:
         defn = str(parsed_defn)
     # XXX: If there's already some info this might be in brackets because it's
     # optional -- should detect this case
-    matches = GRAMMAR_NOTE_RE.finditer(defn)
-    for match in matches:
-        # print('MATCH', match, type(match))
-        match_text = match.group(0)
-        bit = match_text.strip().strip("()").strip()
-        try:
-            note_parsed = parse_bit_or_bits(bit)
-        except UnknownStructureException:
 
-            # XXX: Should probably not catch all UnknownStructureException
-            # exceptions but just when an en word goes into assoc (or avoid
-            # exceptions
-
-            if get_strictness() == EXTRA_STRICT:
-                raise
-            assoc.extra_grammar.append(bit)
-        else:
-            assoc.merge(note_parsed)
-        defn = defn.replace(match_text, "")
-        defn = defn.replace("  ", " ")
-
-    if "=" in defn:
-        if defn.count("=") > 1:
-            unknown_structure("too-many-=s")
-        before, after = defn.split("=")
-        # print('BEFORE', before)
-        if not has_grammar_word(before):
-            unknown_structure("no-grammar-=")
-        if "+" not in before:
-            unknown_structure("need-+-before-=")
-        for bracket in BRACKET_RE.findall(before):
-            assoc.merge(parse_bit_or_bits(bracket.strip("()")))
-            before = before.replace(bracket, "")
-        assoc.merge(parse_assoc_bits(before))
-        defn = after
+    new_assoc_cmds, new_defn = extract(
+        proc_text_assoc(defn), lambda elem: elem[0] == "defn"
+    )
+    assoc_cmds.extend(new_assoc_cmds)
+    assoc = mk_assoc_bits(assoc_cmds)
+    defn = new_defn[0]
 
     return Defn(
         raw_defn=raw_defn,
@@ -234,10 +81,6 @@ def flatten_templates(contents: Wikicode):
     for template in contents.filter_templates():
         if template.name == "gloss":
             contents.replace(template, "({})".format(template.get(1)))
-
-
-def block_templates(contents: Wikicode) -> List[Template]:
-    return [t for t in contents.filter_templates() if t.name not in INLINE_TEMPLATES]
 
 
 def proc_defn_form_template(tmpl: Template):

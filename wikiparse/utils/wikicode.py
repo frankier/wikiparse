@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from mwparserfromhell.nodes import Tag
-from mwparserfromhell.wikicode import Wikicode
+from mwparserfromhell.wikicode import Template, Wikicode
 from mwparserfromhell import parse
 from more_itertools import peekable
 from typing import List, Iterator, Tuple, Optional
 from dataclasses import dataclass
+
+INLINE_TEMPLATES = ["link", "l", "mention", "m", "qualifier"]
 
 
 def get_heading_node(wikicode: Wikicode):
@@ -99,3 +101,7 @@ def double_strip(wikicode: Wikicode) -> str:
     double_stripped = double_stripped.replace("'''", "")
     double_stripped = double_stripped.replace("''", "")
     return double_stripped.strip()
+
+
+def block_templates(contents: Wikicode) -> List[Template]:
+    return [t for t in contents.filter_templates() if t.name not in INLINE_TEMPLATES]
