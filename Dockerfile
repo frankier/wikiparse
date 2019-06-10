@@ -5,6 +5,7 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
 
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python3
+ENV PATH="~/.poetry/bin/:${PATH}"
 
 RUN set -ex && mkdir /app && mkdir /app/wikiparse && touch /app/wikiparse/__init__.py
 
