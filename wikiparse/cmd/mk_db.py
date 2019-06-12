@@ -1,6 +1,9 @@
 import click
 import click_log
+import logging
 from wikiparse.utils.db import get_session
+
+logger = logging.getLogger(__name__)
 
 
 def mk_cmds(metadata):
@@ -27,7 +30,7 @@ def mk_cmds(metadata):
         session = get_session()
 
         for t in reversed(metadata.sorted_tables):
-            print("Dropping", t.name)
+            logger.info("Dropping %s", t.name)
             session.execute(f"TRUNCATE {t.name} RESTART IDENTITY CASCADE;")
         session.commit()
 
