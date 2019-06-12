@@ -18,11 +18,8 @@ def mk_cmds(metadata):
 
     @db.command()
     def recreate():
-        session = get_session()
-        engine = session().get_bind().engine
-        metadata.reflect(bind=engine)
-        metadata.drop_all(engine)
-        metadata.create_all(engine)
+        trunc.callback()
+        create.callback()
 
 
     @db.command()
