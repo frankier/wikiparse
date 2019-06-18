@@ -67,7 +67,8 @@ def get_defn_info(defn: str) -> Defn:
     )
     assoc_cmds.extend(new_assoc_cmds)
     assoc = mk_assoc_bits(assoc_cmds)
-    defn = new_defn[0]
+    assert len(new_defn) == 1
+    defn = new_defn[0][1]
 
     return Defn(
         raw_defn=raw_defn,
