@@ -12,18 +12,15 @@ def mk_cmds(metadata):
     def db():
         pass
 
-
     @db.command()
     def create():
         session = get_session()
         metadata.create_all(session().get_bind().engine)
 
-
     @db.command()
     def recreate():
         trunc.callback()
         create.callback()
-
 
     @db.command()
     def trunc():
