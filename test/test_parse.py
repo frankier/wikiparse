@@ -3,6 +3,7 @@ import re
 from os.path import join as pjoin
 from wikiparse.insert import flatten_senses
 from wikiparse.parse import parse_enwiktionary_page
+from wikiparse.parse_ety import proc_form_template
 from wikiparse.utils.wikicode import parse_nested_list
 from wikiparse.exceptions import EXTRA_STRICT, strictness
 from nose2.tools import params
@@ -99,3 +100,20 @@ def test_compound_fi(compound, *subwords):
             assert re.match(subword, bit["headword"])
         found += 1
     assert found == 1
+
+
+@params(
+    (
+        "{{fi-form of|käydä|pr=first person|pl=singular|mood=indicative|tense=present}}",
+        ("käydä", "-n"),
+    ),
+    ("{{fi-participle of|t=nega|puhua}}", ("puhua", "-ma", "-ton")),
+    ("{{fi-form of|mikä|case=translative|pl=singular}}", ("mikä", "-ksi")),
+)
+def test_form_tags(template_str, expected):
+    wikicode = parse(template_str)
+    template = wikicode.filter_templates()[0]
+    results = list(proc_form_template(template))
+    assert len(results) == 1
+    assert results[0][0] == "ety-head"
+    assert tuple((bit.headword for bit in results[0][1].bits)) == expected

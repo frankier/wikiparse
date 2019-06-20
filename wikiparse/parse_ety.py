@@ -4,8 +4,20 @@ from .exceptions import mk_unknown_structure
 from .template_data import ALL_DERIV_TEMPLATES
 from .template_utils import template_matchers, lang_template_has, lang_template_get
 from .models import DerivationType, Etymology, EtymologyBit, RelationType, Relation
-from finntk.data.wiktionary_normseg import TEMPLATE_NORMSEG_MAP
+from finntk.data.wiktionary_normseg import (
+    TEMPLATE_NORMSEG_MAP,
+    NOUN_FORM_OF_FIELDS_MAP,
+    VERB_FORM_OF_FIELDS_MAP,
+    PL_NORMSEG_MAP,
+    CASE_NORMSEG_MAP,
+    PARTICIPLES_NORM,
+    PARTICIPLES_MAP,
+    FI_INFINITIVES,
+    FI_INFINITIVE_OF_ABBRVS,
+    FI_INFINITIVE_DEFAULT_CASES,
+)
 from .utils.iter import orelse
+from typing import List
 
 
 def proc_ety_only_derivation_template(template: Template):
@@ -105,6 +117,44 @@ def proc_relation_template(template: Template):
         )
 
 
+def extract_normsegs(template, feat_map):
+    for feat, normseg_mapping in feat_map.items():
+        if normseg_mapping is None:
+            # Passthrough (suffix)
+            if not template.has(feat):
+                continue
+            seg = str(template.get(feat).value)
+        elif isinstance(feat, str):
+            if not template.has(feat):
+                continue
+            feat_val = str(template.get(feat).value)
+            if feat_val not in normseg_mapping:
+                continue
+            seg = normseg_mapping[feat_val]
+        else:
+            assert feat == ("pr", "pl")  # Special cased
+            if not template.has("pr"):
+                continue
+            pr_feat = str(template.get("pr").value).replace(" ", "-")
+            pl_feat = (
+                str(template.get("pl").value) if template.has("pl") else "singular"
+            )
+            if (pr_feat, pl_feat) not in normseg_mapping:
+                continue
+            seg = normseg_mapping[(pr_feat, pl_feat)]
+        if seg is not None:
+            yield seg
+
+
+def add_normsegs(normsegs, new_normsegs):
+    if new_normsegs is None:
+        return
+    elif isinstance(new_normsegs, str):
+        normsegs.append(new_normsegs)
+    else:
+        normsegs.extend(new_normsegs)
+
+
 def proc_form_template(template: Template):
     # e.g.
     template_name = str(template.name)
@@ -115,16 +165,52 @@ def proc_form_template(template: Template):
         "fi-infinitive of",
         "fi-form of",
     ):
-        # XXX TODO
         if template_name == "plural of":
             child = str(lang_template_get(template, 2))
         else:
             child = str(template.get(1))
-        yield "ety-head", Etymology(
-            DerivationType.inflection,
-            [EtymologyBit(headword=child), EtymologyBit(headword="-inflection")],
-            str(template),
-        )
+        inflection_bits: List[str] = []
+        if template_name in ["fi-verb form", "fi-form of"]:
+            if template.has("case"):
+                # It's a nominal
+                fields_map = NOUN_FORM_OF_FIELDS_MAP
+            else:
+                # Assume it's a verb
+                fields_map = VERB_FORM_OF_FIELDS_MAP
+            inflection_bits = list(extract_normsegs(template, fields_map))
+        elif template_name == "fi-participle of":
+            participle = str(template.get("t").value)
+            if participle in PARTICIPLES_NORM:
+                participle = PARTICIPLES_NORM[participle]
+            add_normsegs(inflection_bits, PARTICIPLES_MAP[participle])
+            if template.has("plural"):
+                inflection_bits.append(PL_NORMSEG_MAP["plural"])
+            if template.has("case"):
+                case_normseg = CASE_NORMSEG_MAP[str(template.get("case").value)]
+                add_normsegs(inflection_bits, case_normseg)
+            if template.has("suffix"):
+                inflection_bits.append(str(template.get("suffix").value))
+        elif template_name == "fi-infinitive of":
+            infinitive = str(template.get("t").value)
+            add_normsegs(inflection_bits, FI_INFINITIVES[infinitive])
+            if template.has("c"):
+                case_name = FI_INFINITIVE_OF_ABBRVS[str(template.get("c").value)]
+            else:
+                case_name = FI_INFINITIVE_DEFAULT_CASES[infinitive]
+            case_normseg = CASE_NORMSEG_MAP[case_name]
+            add_normsegs(inflection_bits, case_normseg)
+            if template.has("suffix"):
+                inflection_bits.append(str(template.get("suffix").value))
+        else:
+            add_normsegs(inflection_bits, TEMPLATE_NORMSEG_MAP[template_name])
+        # XXX: TODO log unprocessed template info
+        if len(inflection_bits) > 0:
+            yield "ety-head", Etymology(
+                DerivationType.inflection,
+                [EtymologyBit(headword=child)]
+                + [EtymologyBit(headword=inf) for inf in inflection_bits],
+                str(template),
+            )
 
 
 def proc_ety_derivation_template(template):
