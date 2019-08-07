@@ -188,8 +188,6 @@ def proc_form_template(template: Template):
             if template.has("case"):
                 case_normseg = CASE_NORMSEG_MAP[str(template.get("case").value)]
                 add_normsegs(inflection_bits, case_normseg)
-            if template.has("suffix"):
-                inflection_bits.append(str(template.get("suffix").value))
         elif template_name == "fi-infinitive of":
             infinitive = str(template.get("t").value)
             add_normsegs(inflection_bits, FI_INFINITIVES[infinitive])
@@ -199,10 +197,10 @@ def proc_form_template(template: Template):
                 case_name = FI_INFINITIVE_DEFAULT_CASES[infinitive]
             case_normseg = CASE_NORMSEG_MAP[case_name]
             add_normsegs(inflection_bits, case_normseg)
-            if template.has("suffix"):
-                inflection_bits.append(str(template.get("suffix").value))
         else:
             add_normsegs(inflection_bits, TEMPLATE_NORMSEG_MAP[template_name])
+        if template.has("suffix"):
+            inflection_bits.append(str(template.get("suffix").value))
         # XXX: TODO log unprocessed template info
         if len(inflection_bits) > 0:
             yield "ety-head", Etymology(
