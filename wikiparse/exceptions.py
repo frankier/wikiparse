@@ -36,7 +36,7 @@ UNKNOWN_STRUCTURE_MSGS = {
     # Etys
     "mwe-ety": "Multiword expression etymology section not supported yet",
     "multi-template-ety": "Multiple derrivation templates found in etymology",
-    "unknown-template": "Unknown template found in etymology: '{}'",
+    "unknown-template-ety": "Unknown template found in etymology: '{}'",
 }
 
 

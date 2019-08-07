@@ -59,6 +59,21 @@ def stats():
     pass
 
 
+def tree_parts_from_doc(doc):
+    yield (doc["event"],)
+    if doc["event"] == "unknown_structure":
+        yield (doc["event"], doc["nick"])
+        if doc["nick"] == "expect-only":
+            yield (doc["event"], doc["nick"]) + doc["extra"][0]
+        elif doc["nick"] == "not-ux-lb":
+            for other in doc["extra"][0]:
+                yield (doc["event"], doc["nick"], "|".join(other))
+        elif doc["nick"] == "lb-fin-unknown":
+            yield (doc["event"], doc["nick"]) + doc["extra"][1]
+        elif doc["nick"] == "unknown-template":
+            yield (doc["event"], doc["nick"], doc["extra"][0])
+
+
 @stats.command()
 @click.argument("inf")
 @click.argument("outf")
@@ -77,18 +92,9 @@ def parse_stats_agg(inf, outf):
                     word_rows[word] = Counter()
                 row = word_rows[word]
 
-                def inc(*bits):
-                    row[" ".join(bits)] += 1
+                for bits in tree_parts_from_doc(doc):
+                    row[" / ".join(bits)] += 1
 
-                inc(doc["event"])
-                if doc["event"] == "unknown_structure":
-                    inc(doc["event"], doc["nick"])
-                    if doc["nick"] == "expect-only":
-                        inc(doc["event"], doc["nick"], *doc["extra"][0])
-                    elif doc["nick"] == "not-ux-lb":
-                        inc(doc["event"], doc["nick"], doc["extra"][0])
-                    elif doc["nick"] == "lb-fin-unknown":
-                        inc(doc["event"], doc["nick"], *doc["extra"][1])
             elif doc["type"] == "total_count":
                 total_count += doc["count"]
             elif doc["type"] == "unknown_pos_title":

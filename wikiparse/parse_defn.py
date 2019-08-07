@@ -264,7 +264,7 @@ def get_senses_and_examples_defn(
         is_ux_template = True
         ux_template = templates[0]
     else:
-        unknown_structure("not-ux-lb", ", ".join([repr(m) for m in t_match]))
+        unknown_structure("not-ux-lb", t_match)
     is_sense = level == 0 or detect_sense(str(contents)) or is_lb_template
     if is_sense and not is_ux_template:
         yield "frag", proc_sense(contents, children_result, morph_dict)
