@@ -88,6 +88,7 @@ def insert_ety_head(session, lemma: str, ety_head, headword_id_map):
         tables.etymology,
         etymology_index=ety_head.pop("ety_idx"),
         headword_id=lemma_id,
+        poses=ety_head.pop("poses"),
     )
     etys = ety_head.pop("etys")
     for ety in etys:

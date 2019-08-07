@@ -56,6 +56,7 @@ def handle_pos_sections(
                 for act, payload in get_ety(etymology):
                     yield act, (str_def_title,), payload
             elif str_def_title in POS:
+                yield "pos", (str_def_title,), str_def_title
                 def_section.remove(def_section.get(0))
                 definitions = get_lead(def_section)
                 for act, payload in get_senses(parse_nested_list(definitions)):
@@ -68,6 +69,26 @@ def handle_pos_sections(
             yield "exception", (str_def_title,), exc
 
 
+class EtymologyGatherer:
+    def __init__(self):
+        self.etys = []
+        self.poses = []
+
+    def filter(self, stream):
+        for act, path, payload in stream:
+            if act == "ety-head":
+                self.etys.append(payload)
+                continue
+            if act == "pos":
+                self.poses.append(payload)
+                continue
+            yield act, path, payload
+
+
+    def etymology_heading(self, ety_idx):
+        return EtymologyHeading(ety_idx, self.etys, self.poses)
+
+
 def handle_etymology_sections(
     sections: List[Wikicode], skip_ety: bool = False
 ) -> Iterator[Tuple[str, Tuple[str, ...], Any]]:
@@ -78,16 +99,13 @@ def handle_etymology_sections(
     for def_section in sections:
         str_def_title = str(get_heading(def_section))
         if str_def_title.startswith("Etymology "):
-            etys = []
-            for act, path, payload in handle_pos_sections(
+            etys = EtymologyGatherer()
+            for act, path, payload in etys.filter(handle_pos_sections(
                 def_section.get_sections(levels=[4]), skip_ety=skip_ety
-            ):
-                if act == "ety-head":
-                    etys.append(payload)
-                else:
-                    yield act, (str_def_title,) + path, payload
-            yield "ety-sec-head", (str_def_title,), EtymologyHeading(
-                get_ety_idx(str_def_title), etys
+            )):
+                yield act, (str_def_title,) + path, payload
+            yield "ety-sec-head", (str_def_title,), etys.etymology_heading(
+                get_ety_idx(str_def_title),
             )
 
 
@@ -99,19 +117,19 @@ def parse_enwiktionary_page(
     defn_lists: Dict = {}
     heads = []
     got_ety_sec_head = False
-    etys = []
+    etys = EtymologyGatherer()
     for lang_section in parsed.get_sections(levels=[2]):
         lang_title = get_heading(lang_section)
         if lang_title != "Finnish":
             continue
-        for act, path, payload in orelse(
+        for act, path, payload in etys.filter(orelse(
             handle_etymology_sections(
                 lang_section.get_sections(levels=[3]), skip_ety=skip_ety
             ),
             handle_pos_sections(
                 lang_section.get_sections(levels=[3]), skip_ety=skip_ety
             ),
-        ):
+        )):
             if act == "defn":
                 if len(path) == 1:
                     defn_lists[path[0]] = payload
@@ -119,8 +137,6 @@ def parse_enwiktionary_page(
                     defn_lists.setdefault(path[0], {})[path[1]] = payload
                 else:
                     raise
-            elif act == "ety-head":
-                etys.append(payload)
             elif act == "ety-sec-head":
                 got_ety_sec_head = True
                 heads.append(payload.tagged_dict())
@@ -139,7 +155,7 @@ def parse_enwiktionary_page(
             else:
                 raise
     if not got_ety_sec_head:
-        heads.append(EtymologyHeading(None, etys).tagged_dict())
+        heads.append(etys.etymology_heading(None).tagged_dict())
     return defn_lists, heads
 
 

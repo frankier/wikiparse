@@ -82,6 +82,7 @@ class DefnTreeFrag(MergeMixin):
 class EtymologyHeading:
     ety_idx: Optional[int]
     etys: List[Etymology]
+    poses: List[str]
 
     def tagged_dict(self):
         d = asdict(self)

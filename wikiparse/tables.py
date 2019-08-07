@@ -25,6 +25,7 @@ etymology = Table(
     Column("id", Integer, primary_key=True),
     Column("etymology_index", Integer, nullable=True),
     Column("headword_id", Integer, ForeignKey("headword.id"), nullable=False),
+    Column("poses", JSON, nullable=False),
 )
 
 derivation = Table(
