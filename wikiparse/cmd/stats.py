@@ -64,7 +64,7 @@ def tree_parts_from_doc(doc):
     if doc["event"] == "unknown_structure":
         yield (doc["event"], doc["nick"])
         if doc["nick"] == "expect-only":
-            yield (doc["event"], doc["nick"]) + doc["extra"][0]
+            yield (doc["event"], doc["nick"]) + tuple(doc["extra"][0])
         elif doc["nick"] == "not-ux-lb":
             for other in doc["extra"][0]:
                 yield (doc["event"], doc["nick"], "|".join(other))
@@ -150,16 +150,16 @@ def parse_stats_top10(inf, col):
 def parse_stats_cov(inf):
     df = pd.read_csv(inf)
     top = dict(top_events(df))
-    success = top.get("success", 0)
-    empty = top.get("empty", 0)
-    total = success + empty
-    error_df = df.drop(["success", "wf", "empty"], axis=1).set_index("word")
-    partial_success = error_df.sum(axis=1).astype(bool).sum() - empty
-    complete_success = success - partial_success
-    print("Success:", success)
+    got_defns = top.get("got_defns", 0)
+    defns_empty = top.get("defns_empty", 0)
+    total = got_defns + defns_empty
+    error_df = df.drop(["got_defns", "wf", "defns_empty"], axis=1).set_index("word")
+    partial_success = error_df.sum(axis=1).astype(bool).sum() - defns_empty
+    complete_success = got_defns - partial_success
+    print("Success:", got_defns)
     print("Partial success:", partial_success)
     print("Complete success:", complete_success)
-    print("Empty:", empty)
+    print("Empty:", defns_empty)
     print("Total:", total)
-    print("Partial coverage: {:.1f}".format((success / total) * 100))
+    print("Partial coverage: {:.1f}".format((got_defns / total) * 100))
     print("Full coverage: {:.1f}".format((complete_success / total) * 100))
