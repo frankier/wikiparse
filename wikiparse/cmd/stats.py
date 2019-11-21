@@ -71,7 +71,7 @@ def tree_parts_from_doc(doc):
         elif doc["nick"] == "lb-fin-unknown":
             yield (doc["event"], doc["nick"]) + doc["extra"][1]
         elif doc["nick"] == "unknown-template":
-            yield (doc["event"], doc["nick"], doc["extra"][0])
+            yield (doc["event"], doc["nick"]) + doc["extra"]
 
 
 @stats.command()
