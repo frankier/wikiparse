@@ -242,4 +242,4 @@ def get_ety(wikicode: Wikicode):
         pass
     other_templates = t_match.difference(ALL_DERIV_TEMPLATES)
     for t_match in other_templates:
-        yield "exception", mk_unknown_structure("unknown-template-ety", str(t_match))
+        yield "exception", mk_unknown_structure("unknown-template-ety", t_match)

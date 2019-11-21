@@ -10,7 +10,7 @@ from .utils.nlp import detect_fi_en, has_grammar_word, BRACKET_RE
 from .models import DefnTreeFrag, Defn, Example
 
 from .exceptions import unknown_structure, UnknownStructureException, expect_only
-from .template_data import FORM_TEMPLATES, DEFN_TEMPLATES, DERIV_TEMPLATES
+from .template_data import FORM_TEMPLATES, DEFN_TEMPLATES, DERIV_TEMPLATES, NON_GLOSS_TEMPLATES
 from .template_utils import template_matchers
 from .parse_assoc import proc_lb_template_assoc, proc_text_assoc, mk_assoc_bits
 from .parse_ety import proc_defn_head_template
@@ -99,7 +99,7 @@ def proc_defn_form_template(tmpl: Template):
 
 
 def proc_sense(
-    contents: Wikicode, children_result: DefnTreeFrag, morph_dict: Optional[Dict] = None
+    contents: Wikicode, children_result: DefnTreeFrag, non_gloss: bool=False, morph_dict: Optional[Dict] = None
 ) -> DefnTreeFrag:
     result = DefnTreeFrag()
     # Sense
@@ -159,6 +159,7 @@ def proc_sense(
     if len(subsenses):
         sense_dict.subsenses = subsenses
     result.senses.append(sense_dict)
+    result.non_gloss = non_gloss
     return result
 
 
@@ -243,6 +244,11 @@ def get_senses_and_examples_defn(
     is_ux_template = False
     morph_dict = None
     ux_template = None
+    non_gloss = False
+
+    def get_template(matches):
+        return templates[t_match.index(matches[0])]
+
     if not t_match:
         # No template
         pass
@@ -254,12 +260,22 @@ def get_senses_and_examples_defn(
                 unknown_structure(
                     "multiple-form-tmpls", repr(list(form_templates_matches))
                 )
-            form_template = templates[t_match.index(form_templates_matches[0])]
+            form_template = get_template(form_templates_matches)
             # Get etys for adding to headword
             yield from proc_defn_head_template(form_template)
             # Put form stuff on defns
             if form_templates_matches.intersection(FORM_TEMPLATES):
                 morph_dict = proc_defn_form_template(form_template)
+        non_gloss_template_matches = t_match.intersection(NON_GLOSS_TEMPLATES)
+        if non_gloss_template_matches:
+            non_gloss = True
+            template = get_template(non_gloss_template_matches)
+            new_contents = str(template.get(1))
+            contents.remove(template)
+            if contents.strip():
+                contents = new_contents + " " + str(contents)
+            else:
+                contents = new_contents
     elif t_match.issubset({("ux", "fi")}):
         is_ux_template = True
         ux_template = templates[0]
@@ -267,7 +283,7 @@ def get_senses_and_examples_defn(
         unknown_structure("not-ux-lb", t_match)
     is_sense = level == 0 or detect_sense(str(contents)) or is_lb_template
     if is_sense and not is_ux_template:
-        yield "frag", proc_sense(contents, children_result, morph_dict)
+        yield "frag", proc_sense(contents, children_result, non_gloss, morph_dict)
     else:
         if is_ux_template:
             yield "frag", proc_example(contents, children_result, ux_template)

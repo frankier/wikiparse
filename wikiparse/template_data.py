@@ -37,6 +37,10 @@ DERIV_TEMPLATES = {
     ("agent noun of", "fi"),
 }
 
+NON_GLOSS_TEMPLATES = {
+    ("non-gloss definition",),
+}
+
 ETY_ONLY_DERIV_TEMPLATES = {
     ("prefix", "fi"),
     ("suffix", "fi"),
@@ -57,6 +61,6 @@ REL_TEMPLATES = {
 
 ALL_DERIV_TEMPLATES = DERIV_TEMPLATES | ETY_ONLY_DERIV_TEMPLATES
 
-DEFN_TEMPLATES = FORM_TEMPLATES | REL_TEMPLATES | DERIV_TEMPLATES | {("lb", "fi")}
+DEFN_TEMPLATES = FORM_TEMPLATES | REL_TEMPLATES | DERIV_TEMPLATES | NON_GLOSS_TEMPLATES | {("lb", "fi")}
 
 # TODO: Cross language bor/der/cog

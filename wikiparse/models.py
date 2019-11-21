@@ -60,6 +60,7 @@ class Defn:
 
     fi_examples: List[Example] = field(default_factory=list)
     bi_examples: List[Example] = field(default_factory=list)
+    non_gloss: bool = False
     morph: Optional[Dict] = None
 
 
