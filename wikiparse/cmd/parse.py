@@ -39,7 +39,7 @@ def parse_dump(inf, words=None, stats_db=None, outdir=None):
 @parse.command()
 @click.argument("filename", type=click.File())
 def parse_file(filename):
-    defns = parse_enwiktionary_page(filename, open(filename).read())
+    defns = parse_enwiktionary_page(filename, filename.read())
     if defns is None:
         print("No definitions found")
     pprint(defns)
