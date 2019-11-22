@@ -72,6 +72,8 @@ def tree_parts_from_doc(doc):
             yield (doc["event"], doc["nick"]) + doc["extra"][1]
         elif doc["nick"] == "unknown-template":
             yield (doc["event"], doc["nick"]) + doc["extra"]
+        elif doc["nick"] == "unknown-template-ety":
+            yield (doc["event"], doc["nick"]) + tuple(doc["extra"][0])
 
 
 @stats.command()
