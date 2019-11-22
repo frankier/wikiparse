@@ -3,3 +3,6 @@
 __pycache__/
 *.pyc
 /.mypy_cache/
+/pip-wheel-metadata/
+/enwiktionary-????????.*
+/enwiktionary-20171001-pages-meta-current.xml.defns/
