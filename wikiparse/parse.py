@@ -12,7 +12,6 @@ import traceback
 from os import makedirs
 from os.path import join as pjoin
 import ujson
-from pybloom import ScalableBloomFilter
 from typing import Any, Dict, List, Union, Tuple, Iterator
 import mwxml
 from mwxml.iteration import Dump, page as mwxml_iteration_page
@@ -206,11 +205,7 @@ class TextOnlyRevisionMonkeyPatch:
 mwxml_iteration_page.Revision = TextOnlyRevisionMonkeyPatch
 
 
-def process_dump(inf, outdir, sbf=None):
-    if sbf is not None:
-        with open(sbf, "rb") as fh:
-            sbf = ScalableBloomFilter.fromfile(fh)
-
+def process_dump(inf, outdir):
     # Dict with DefnListDictTree2L, List[Any]
     def page_info(
         dump
@@ -224,7 +219,6 @@ def process_dump(inf, outdir, sbf=None):
                     page.namespace != 0
                     or page.title.startswith("User:")
                     or "/" in page.title
-                    or (sbf is not None and page.title not in sbf)
                 ):
                     continue
                 revision = next(page)
@@ -290,27 +284,3 @@ def process_dump(inf, outdir, sbf=None):
             print("Exception while processing", lemma, results)
             raise
     print("Got {}".format(successful))
-
-
-def get_finnish_words(filename, words):
-    def detect_finnish(dump, path):
-        for page in dump.pages:
-            revision = next(page)
-            if revision.text is not None and "==Finnish==" not in revision.text:
-                # Short cut parsing
-                continue
-            parsed = parse(revision.text, skip_style_tags=True)
-            for lang_section in parsed.get_sections(levels=[2]):
-                lang_title = get_heading(lang_section)
-                if lang_title == "Finnish":
-                    yield page.title
-                    break
-
-    finnish_words = 0
-    sbf = ScalableBloomFilter(mode=ScalableBloomFilter.SMALL_SET_GROWTH)
-    for lemma in mwxml.map(detect_finnish, [filename]):
-        sbf.add(lemma)
-        finnish_words += 1
-    print("Finnish words: {}", finnish_words)
-
-    return sbf

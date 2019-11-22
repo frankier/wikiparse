@@ -4,7 +4,7 @@ import logging
 from pprint import pprint
 from typing import Any, Dict, List, Optional, Tuple
 
-from wikiparse.parse import process_dump, parse_enwiktionary_page, get_finnish_words
+from wikiparse.parse import process_dump, parse_enwiktionary_page
 from wikiparse.insert import (
     insert_defns,
     insert_ety_head,
@@ -25,15 +25,14 @@ def parse():
 
 @parse.command()
 @click.argument("inf", type=click.File())
-@click.argument("words", required=False)
 @click.option("--stats-db")
 @click.option("--outdir")
-def parse_dump(inf, words=None, stats_db=None, outdir=None):
+def parse_dump(inf, stats_db=None, outdir=None):
     if stats_db is not None:
         install_db_stats_logger(stats_db)
     logging.basicConfig(filename="example.log", level=logging.DEBUG)
     # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-    process_dump(inf, outdir, words)
+    process_dump(inf, outdir)
 
 
 @parse.command()
@@ -92,13 +91,3 @@ def insert_dir_inner(db, indir: str):
 @click.argument("indir")
 def insert_dir(indir: str):
     insert_dir_inner(get_session(), indir)
-
-
-@parse.command()
-@click.argument("filename")
-@click.argument("words")
-def save_finnish_words(filename, words):
-    sbf = get_finnish_words(filename, words)
-
-    with open(words, "wb") as fh:
-        sbf.tofile(fh)
