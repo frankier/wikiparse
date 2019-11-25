@@ -8,10 +8,17 @@ from .parse import get_ety_idx
 T = TypeVar("T")
 
 
+def flatten_subsenses(senses, prefix: str):
+    for sense_idx, sense in enumerate(senses):
+        new_prefix = prefix + str(sense_idx + 1)
+        yield new_prefix, sense
+        yield from flatten_subsenses(sense.get("subsenses", ()), new_prefix + ".")
+
+
 def flatten(nested_senses, ety, prefix):
     for pos, senses in nested_senses.items():
-        for sense_idx, sense in enumerate(senses):  # type: Tuple[int, T]
-            yield prefix + "{}.{}".format(pos, sense_idx + 1), ety, pos, sense
+        for label, sense in flatten_subsenses(senses, f"{prefix}{pos}."):
+            yield label, ety, pos, sense
 
 
 def flatten_senses(
