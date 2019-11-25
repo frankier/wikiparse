@@ -8,6 +8,7 @@ from wikiparse.utils.wikicode import parse_nested_list
 from wikiparse.exceptions import EXTRA_STRICT, strictness
 from nose2.tools import params
 from mwparserfromhell import parse
+import ujson
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -20,6 +21,10 @@ def read_data(entry):
     return open(pjoin(data_dir, entry)).read()
 
 
+def flatten_roundtrip_senses(defns):
+    return flatten_senses(ujson.loads(ujson.dumps(defns)))
+
+
 @params(*MIN_LENGTHS.keys())
 def test_parse_min_results(entry):
     """
@@ -27,7 +32,7 @@ def test_parse_min_results(entry):
     """
     defns, _heads = parse_enwiktionary_page(entry, read_data(entry))
 
-    got_senses = len(list(flatten_senses(defns)))
+    got_senses = len(list(flatten_roundtrip_senses(defns)))
     min_senses = MIN_LENGTHS[entry]
     assert got_senses >= min_senses, "Needed {} senses for {} but got {}".format(
         min_senses, entry, got_senses
@@ -117,3 +122,14 @@ def test_form_tags(template_str, expected):
     assert len(results) == 1
     assert results[0][0] == "ety-head"
     assert tuple((bit.headword for bit in results[0][1].bits)) == expected
+
+
+def test_pitaa_gram_rm():
+    defns, _heads = parse_enwiktionary_page("pitaa", read_data("pitaa"))
+    to_like_defn = defns["Verb"][0]
+    assert "like" in to_like_defn.cleaned_defn
+    assert "elative" not in to_like_defn.cleaned_defn
+    to_prefer_defn = to_like_defn.subsenses[0]
+    assert "prefer" in to_prefer_defn.cleaned_defn
+    assert "elative" not in to_prefer_defn.cleaned_defn
+    assert "=" not in to_prefer_defn.cleaned_defn

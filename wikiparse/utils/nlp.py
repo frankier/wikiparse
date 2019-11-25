@@ -7,6 +7,7 @@ import re
 
 OUR_LANGS = ("en", "fi")
 BRACKET_RE = re.compile(r"\(.*\)")
+EQUALS_RE = re.compile(r"=\s*")
 
 
 def detect_fi_en(content: str) -> Optional[str]:

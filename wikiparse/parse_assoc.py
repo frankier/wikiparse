@@ -2,7 +2,7 @@ import re
 from mwparserfromhell import parse
 from typing import List
 
-from .utils.nlp import BRACKET_RE, detect_fi_en, has_grammar_word
+from .utils.nlp import BRACKET_RE, EQUALS_RE, detect_fi_en, has_grammar_word
 from .utils.wikicode import block_templates
 from .models import AssocBits
 from .gram_words import (
@@ -110,33 +110,14 @@ def proc_lb_template_assoc(templates):
 
 
 def proc_text_assoc(defn):
-    matches = GRAMMAR_NOTE_RE.finditer(defn)
-    for match in matches:
-        # print('MATCH', match, type(match))
-        match_text = match.group(0)
-        bit = match_text.strip().strip("()").strip()
-        try:
-            # Conversion to list to evaluate eagerly at this point
-            note_parsed = list(parse_bit_or_bits(bit))
-        except UnknownStructureException:
-
-            # XXX: Should probably not catch all UnknownStructureException
-            # exceptions but just when an en word goes into assoc (or avoid
-            # exceptions
-
-            if get_strictness() == EXTRA_STRICT:
-                raise
-            yield "extra_grammar", bit
-        else:
-            yield from note_parsed
-        defn = defn.replace(match_text, "")
-        defn = defn.replace("  ", " ")
-
+    new_defn = defn
     if "=" in defn:
         if defn.count("=") > 1:
             unknown_structure("too-many-=s")
+        equals_match = EQUALS_RE.search(defn)
+        yield "rm-gram", defn[:equals_match.end()]
         before, after = defn.split("=")
-        # print('BEFORE', before)
+        new_defn = after
         if not has_grammar_word(before):
             unknown_structure("no-grammar-=")
         if "+" not in before:
@@ -145,24 +126,29 @@ def proc_text_assoc(defn):
             yield from parse_bit_or_bits(bracket.strip("()"))
             before = before.replace(bracket, "")
         yield from parse_assoc_bits(before)
-        defn = after
+    else:
+        matches = GRAMMAR_NOTE_RE.finditer(defn)
+        for match in matches:
+            match_text = match.group(0)
+            bit = match_text.strip().strip("()").strip()
+            try:
+                # Conversion to list to evaluate eagerly at this point
+                note_parsed = list(parse_bit_or_bits(bit))
+            except UnknownStructureException:
+
+                # XXX: Should probably not catch all UnknownStructureException
+                # exceptions but just when an en word goes into assoc (or avoid
+                # exceptions
+
+                if get_strictness() == EXTRA_STRICT:
+                    raise
+                yield "extra_grammar", bit
+            else:
+                yield from note_parsed
+            yield "rm-gram", match_text
+            new_defn = defn.replace(match_text, "")
+            new_defn = new_defn.replace("  ", " ")
     yield "defn", defn
-
-
-def proc_assoc(defn: str):
-    parsed_defn = parse(defn)
-    templates = block_templates(parsed_defn)
-    yield from proc_lb_template_assoc(templates)
-    defn_dirty = False
-    for template in templates:
-        parsed_defn.remove(template)
-        defn_dirty = True
-    if defn_dirty:
-        defn = str(parsed_defn)
-    for cmd, payload in proc_text_assoc(defn):
-        if cmd == "defn":
-            continue
-        yield cmd, payload
 
 
 def mk_assoc_bits(assoc_cmds) -> AssocBits:

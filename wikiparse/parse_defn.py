@@ -17,10 +17,11 @@ from .parse_ety import proc_defn_head_template
 
 EARLY_THRESH = 5
 DEFN_TEMPLATE_START = re.compile(r"{{(lb|lbl|label)\|fi\|")
+GLOSS_TEMPLATE_START = re.compile(r"{{gloss\|")
 
 
 def detect_sense(contents: str) -> bool:
-    if "=" in contents or DEFN_TEMPLATE_START.search(str(contents)):
+    if "=" in contents or DEFN_TEMPLATE_START.search(str(contents)) or GLOSS_TEMPLATE_START.search(str(contents)):
         return True
     # XXX: Can probably be more fine grained here
     if has_grammar_word(contents) and "usage" not in contents:
@@ -42,12 +43,18 @@ def detect_new_sense(contents: str) -> bool:
 
 
 def get_defn_info(defn: str) -> Defn:
+    from .textify import expand_templates
     raw_defn = defn
     parsed_defn = parse(defn)
     defn_dirty = False
     templates = block_templates(parsed_defn)
     assoc_cmds: List[Tuple[str, Any]] = []
-    assoc_cmds.extend(proc_lb_template_assoc(templates))
+    lb_in_defn = True
+    for cmd, payload in proc_lb_template_assoc(templates):
+        if cmd != "qualifier":
+            # lb contains grammar notes, which should be taken out of defn
+            lb_in_defn = False
+        assoc_cmds.append((cmd, payload))
     for template in templates:
         parsed_defn.remove(template)
         defn_dirty = True
@@ -62,26 +69,25 @@ def get_defn_info(defn: str) -> Defn:
     # XXX: If there's already some info this might be in brackets because it's
     # optional -- should detect this case
 
-    new_assoc_cmds, new_defn = extract(
-        proc_text_assoc(defn), lambda elem: elem[0] == "defn"
-    )
-    assoc_cmds.extend(new_assoc_cmds)
+    rm_gram = None
+    for cmd, payload in proc_text_assoc(defn):
+        if cmd == "rm-gram":
+            rm_gram = payload
+        elif cmd == "defn":
+            # defn is just thrown away at this point. it is overly stripped
+            pass
+        else:
+            assoc_cmds.append((cmd, payload))
     assoc = mk_assoc_bits(assoc_cmds)
-    assert len(new_defn) == 1
-    defn = new_defn[0][1]
+
+    expanded = expand_templates(raw_defn, keep_lb=lb_in_defn, rm_text=rm_gram)
 
     return Defn(
         raw_defn=raw_defn,
-        cleaned_defn=defn,
-        stripped_defn=double_strip(parse(defn)),
+        cleaned_defn=expanded,
+        stripped_defn=double_strip(expanded),
         assoc=assoc,
     )
-
-
-def flatten_templates(contents: Wikicode):
-    for template in contents.filter_templates():
-        if template.name == "gloss":
-            contents.replace(template, "({})".format(template.get(1)))
 
 
 def proc_defn_form_template(tmpl: Template):
@@ -155,11 +161,11 @@ def proc_sense(
             # Put all examples under first sense
             setattr(sense_dicts[0], example_type, examples)
     sense_dict = sense_dicts[0]
+    sense_dict.non_gloss = non_gloss
     subsenses = children_result.senses + sense_dicts[1:]
     if len(subsenses):
         sense_dict.subsenses = subsenses
     result.senses.append(sense_dict)
-    result.non_gloss = non_gloss
     return result
 
 
@@ -237,7 +243,6 @@ def get_senses_and_examples_defn(
     yield from to_propagate
     children_result = children_result[0][1]
     contents = defn.contents
-    flatten_templates(contents)
     templates = block_templates(contents)
     t_match = template_matchers(templates)
     is_lb_template = False
@@ -249,7 +254,7 @@ def get_senses_and_examples_defn(
     def get_template(matches):
         return templates[t_match.index(matches[0])]
 
-    if not t_match:
+    if not t_match or contents is None:
         # No template
         pass
     elif t_match.issubset(DEFN_TEMPLATES):

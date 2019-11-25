@@ -7,7 +7,7 @@ from more_itertools import peekable
 from typing import List, Iterator, Tuple, Optional
 from dataclasses import dataclass
 
-INLINE_TEMPLATES = ["link", "l", "mention", "m", "qualifier"]
+INLINE_TEMPLATES = ["link", "l", "mention", "m", "qualifier", "gloss"]
 
 
 def get_heading_node(wikicode: Wikicode):
