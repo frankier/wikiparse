@@ -84,7 +84,7 @@ def get_defn_info(defn: str) -> Defn:
 
     return Defn(
         raw_defn=raw_defn,
-        cleaned_defn=expanded,
+        cleaned_defn=str(expanded),
         stripped_defn=double_strip(expanded),
         assoc=assoc,
     )

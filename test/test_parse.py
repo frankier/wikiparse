@@ -21,8 +21,12 @@ def read_data(entry):
     return open(pjoin(data_dir, entry)).read()
 
 
-def flatten_roundtrip_senses(defns):
-    return flatten_senses(ujson.loads(ujson.dumps(defns)))
+def flat_roundtrip_senses(defns):
+    res = {}
+    roundtripped = ujson.loads(ujson.dumps(defns))
+    for full_id, _ety, _pos, sense in flatten_senses(roundtripped):
+        res[full_id] = sense
+    return res
 
 
 @params(*MIN_LENGTHS.keys())
@@ -32,7 +36,7 @@ def test_parse_min_results(entry):
     """
     defns, _heads = parse_enwiktionary_page(entry, read_data(entry))
 
-    got_senses = len(list(flatten_roundtrip_senses(defns)))
+    got_senses = len(flat_roundtrip_senses(defns))
     min_senses = MIN_LENGTHS[entry]
     assert got_senses >= min_senses, "Needed {} senses for {} but got {}".format(
         min_senses, entry, got_senses
@@ -133,3 +137,31 @@ def test_pitaa_gram_rm():
     assert "prefer" in to_prefer_defn.cleaned_defn
     assert "elative" not in to_prefer_defn.cleaned_defn
     assert "=" not in to_prefer_defn.cleaned_defn
+
+
+def test_saattaa():
+    defns, heads = parse_enwiktionary_page("saattaa", read_data("saattaa"))
+    verb_4_1 = defns["Verb"][3].subsenses[0].cleaned_defn
+    assert "might" in verb_4_1
+    assert "do, probably do" in verb_4_1
+
+
+def test_syn_doesnt_become_sense():
+    # TODO: Avoid parsing this syn into its own sense
+    # TODO: Add it as a relation
+    #   Step 1. to headword
+    #   Step 2. to sense
+    """
+    defns, _heads = parse_enwiktionary_page("kayda", read_data("kayda"))
+    assert len(defns["Verb"][3].subsenses) == 0
+    """
+    return
+
+
+def test_empty_defn():
+    # TODO: When defn contains only a relation, it should be put on the headword and no sense added
+    """
+    defns, _heads = parse_enwiktionary_page("kummaksua", read_data("kummaksua"))
+    assert len(defns) == 0
+    """
+    return

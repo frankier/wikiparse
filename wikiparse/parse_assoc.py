@@ -26,7 +26,7 @@ BIT_STOPWORDS = [
     # XXX: should capture information about this
     "or",
 ]
-GRAMMAR_NOTE_RE = re.compile(r"\(.*({}).*\)".format("|".join(GRAMMAR_WORDS)))
+GRAMMAR_NOTE_RE = re.compile(r"\([^\)]*({})[^\)]*\)".format("|".join(GRAMMAR_WORDS)))
 
 
 def tokenise_grammar_words(bit: str) -> List[str]:

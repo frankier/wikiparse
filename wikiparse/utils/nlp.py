@@ -6,7 +6,7 @@ import re
 
 
 OUR_LANGS = ("en", "fi")
-BRACKET_RE = re.compile(r"\(.*\)")
+BRACKET_RE = re.compile(r"\([^\)]*\)")
 EQUALS_RE = re.compile(r"=\s*")
 
 
