@@ -66,26 +66,21 @@ def get_defn_info(defn: str) -> Defn:
         defn_dirty = True
     if defn_dirty:
         defn = str(parsed_defn)
-    # XXX: If there's already some info this might be in brackets because it's
-    # optional -- should detect this case
 
-    rm_gram = None
     for cmd, payload in proc_text_assoc(defn):
-        if cmd == "rm-gram":
-            rm_gram = payload
-        elif cmd == "defn":
+        if cmd == "defn":
             # defn is just thrown away at this point. it is overly stripped
             pass
         else:
             assoc_cmds.append((cmd, payload))
     assoc = mk_assoc_bits(assoc_cmds)
 
-    expanded = expand_templates(raw_defn, keep_lb=lb_in_defn, rm_text=rm_gram)
+    expanded = expand_templates(raw_defn, keep_lb=lb_in_defn, rm_gram=True)
 
     return Defn(
         raw_defn=raw_defn,
-        cleaned_defn=str(expanded),
-        stripped_defn=double_strip(expanded),
+        cleaned_defn=expanded,
+        stripped_defn=double_strip(parse(expanded)),
         assoc=assoc,
     )
 

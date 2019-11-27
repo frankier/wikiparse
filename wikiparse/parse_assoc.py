@@ -26,7 +26,7 @@ BIT_STOPWORDS = [
     # XXX: should capture information about this
     "or",
 ]
-GRAMMAR_NOTE_RE = re.compile(r"\([^\)]*({})[^\)]*\)".format("|".join(GRAMMAR_WORDS)))
+GRAMMAR_NOTE_RE = re.compile(r"\([^\)]*\b({})\b[^\)]*\)".format("|".join(GRAMMAR_WORDS)))
 
 
 def tokenise_grammar_words(bit: str) -> List[str]:
@@ -110,12 +110,15 @@ def proc_lb_template_assoc(templates):
 
 
 def proc_text_assoc(defn):
+    """
+    This method extracts grammar stuff from grammar notes that exist only as
+    text.
+    """
+
     new_defn = defn
     if "=" in defn:
         if defn.count("=") > 1:
             unknown_structure("too-many-=s")
-        equals_match = EQUALS_RE.search(defn)
-        yield "rm-gram", defn[:equals_match.end()]
         before, after = defn.split("=")
         new_defn = after
         if not has_grammar_word(before):
@@ -145,10 +148,28 @@ def proc_text_assoc(defn):
                 yield "extra_grammar", bit
             else:
                 yield from note_parsed
-            yield "rm-gram", match_text
             new_defn = defn.replace(match_text, "")
             new_defn = new_defn.replace("  ", " ")
     yield "defn", defn
+
+
+def rm_gram_assoc(defn):
+    """
+    This method deals with the same things as proc_text_assoc, but only removes
+    them. This means we work in two passes, an extraction pass and a removal
+    pass.
+    """
+    if "=" in defn:
+        if defn.count("=") > 1:
+            unknown_structure("too-many-=s")
+        before, after = defn.split("=")
+        return after
+    else:
+        matches = GRAMMAR_NOTE_RE.finditer(defn)
+        for match in matches:
+            match_text = match.group(0)
+            defn = defn.replace(match_text, "")
+        return defn
 
 
 def mk_assoc_bits(assoc_cmds) -> AssocBits:

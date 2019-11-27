@@ -165,3 +165,24 @@ def test_empty_defn():
     assert len(defns) == 0
     """
     return
+
+
+def test_maki_not_gram_note():
+    defns, heads = parse_enwiktionary_page("maki", read_data("maki"))
+    assert "a relatively large, usually rounded elevation of earth" in defns["Noun"][0].cleaned_defn
+
+
+THING = """
+==Finnish==
+
+===Noun===
+{{fi-noun}}
+
+# A [[thing]] (~ elative {{m|xxx}})
+"""
+
+
+def test_gram_note_has_formatting():
+    defns, heads = parse_enwiktionary_page("test", THING)
+    assert "thing" in defns["Noun"][0].cleaned_defn
+    assert "elative" not in defns["Noun"][0].cleaned_defn
