@@ -172,6 +172,26 @@ def rm_gram_assoc(defn):
         return defn
 
 
+def proc_assoc(defn: str):
+    """
+    This method is not used elsewhere here, but is used as an entry point by
+    lextract to get information for building frames.
+    """
+    parsed_defn = parse(defn)
+    templates = block_templates(parsed_defn)
+    yield from proc_lb_template_assoc(templates)
+    defn_dirty = False
+    for template in templates:
+        parsed_defn.remove(template)
+        defn_dirty = True
+    if defn_dirty:
+        defn = str(parsed_defn)
+    for cmd, payload in proc_text_assoc(defn):
+        if cmd == "defn":
+            continue
+        yield cmd, payload
+
+
 def mk_assoc_bits(assoc_cmds) -> AssocBits:
     assoc = AssocBits()
     for assoc_cmd, bit in assoc_cmds:
