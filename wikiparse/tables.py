@@ -24,7 +24,7 @@ etymology = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("etymology_index", Integer, nullable=True),
-    Column("headword_id", Integer, ForeignKey("headword.id"), nullable=False),
+    Column("headword_id", Integer, ForeignKey("headword.id"), nullable=False, index=True),
     Column("poses", JSON, nullable=False),
 )
 
@@ -32,7 +32,7 @@ derivation = Table(
     "derivation",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("etymology_id", Integer, ForeignKey("etymology.id"), nullable=False),
+    Column("etymology_id", Integer, ForeignKey("etymology.id"), nullable=False, index=True),
     Column("type", Enum(DerivationType), nullable=False),
     Column("extra", JSON, nullable=False),
 )
@@ -41,7 +41,7 @@ derivation_seg = Table(
     "derivation_seg",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("derivation_id", Integer, ForeignKey("derivation.id"), nullable=False),
+    Column("derivation_id", Integer, ForeignKey("derivation.id"), nullable=False, index=True),
     Column("derived_seg_id", Integer, ForeignKey("headword.id"), nullable=False),
     Column("alt", String),
 )
