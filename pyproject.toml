@@ -21,7 +21,8 @@ more-itertools = "*"
 langdetect = "^1.0"
 nltk = "^3.4"
 wordfreq = "^2.2"
-finntk = ">=0.0.47"
+finntk = ">=0.0.68"
+eralchemy = "^1.2.10"
 
 [tool.poetry.dev-dependencies]
 "nose2" = "*"

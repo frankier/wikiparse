@@ -165,3 +165,11 @@ def parse_stats_cov(inf):
     print("Total:", total)
     print("Partial coverage: {:.1f}".format((got_defns / total) * 100))
     print("Full coverage: {:.1f}".format((complete_success / total) * 100))
+
+
+@stats.command()
+@click.argument("outf")
+def dump_schema(outf):
+    from wikiparse.tables import metadata
+    from eralchemy import render_er
+    render_er(metadata, outf)
