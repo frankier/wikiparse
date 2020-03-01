@@ -7,6 +7,14 @@ logger = logging.getLogger(__name__)
 
 
 def mk_cmds(metadata):
+    def drop_trunc(which, extra=""):
+        session = get_session()
+
+        for t in reversed(metadata.sorted_tables):
+            logger.info("%s %s", which, t.name)
+            session.execute(f"{which} {t.name} {extra} CASCADE;")
+        session.commit()
+
     @click.group()
     @click_log.simple_verbosity_option()
     def db():
@@ -19,16 +27,11 @@ def mk_cmds(metadata):
 
     @db.command()
     def recreate():
-        trunc.callback()
+        drop_trunc("DROP TABLE IF EXISTS");
         create.callback()
 
     @db.command()
     def trunc():
-        session = get_session()
-
-        for t in reversed(metadata.sorted_tables):
-            logger.info("Dropping %s", t.name)
-            session.execute(f"TRUNCATE {t.name} RESTART IDENTITY CASCADE;")
-        session.commit()
+        drop_trunc("TRUNCATE", "RESTART IDENTITY");
 
     return db
