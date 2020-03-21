@@ -697,7 +697,7 @@ category = "dev"
 description = "YAML parser and emitter for Python"
 name = "pyyaml"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "5.2"
 
 [[package]]
@@ -918,7 +918,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 pgsql = []
 
 [metadata]
-content-hash = "e59e101fc7e53234e594c2da75d4ff474222c4ca4e357bd070eb249d6e7b7a71"
+content-hash = "0a5dd4b459e0219fe43e59d22ce4e7ca4121c3d0c134454dfef6c5733e1dc716"
 python-versions = "^3.6"
 
 [metadata.files]
