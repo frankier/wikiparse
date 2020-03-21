@@ -2,7 +2,7 @@ import re
 from mwparserfromhell import parse
 from typing import List
 
-from .utils.nlp import BRACKET_RE, EQUALS_RE, detect_fi_en, has_grammar_word
+from .utils.nlp import BRACKET_RE, detect_fi_en, has_grammar_word
 from .utils.wikicode import block_templates
 from .models import AssocBits
 from .gram_words import (
@@ -26,7 +26,9 @@ BIT_STOPWORDS = [
     # XXX: should capture information about this
     "or",
 ]
-GRAMMAR_NOTE_RE = re.compile(r"\([^\)]*\b({})\b[^\)]*\)".format("|".join(GRAMMAR_WORDS)))
+GRAMMAR_NOTE_RE = re.compile(
+    r"\([^\)]*\b({})\b[^\)]*\)".format("|".join(GRAMMAR_WORDS))
+)
 
 
 def tokenise_grammar_words(bit: str) -> List[str]:

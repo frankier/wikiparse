@@ -10,7 +10,12 @@ from .utils.nlp import detect_fi_en, has_grammar_word, BRACKET_RE
 from .models import DefnTreeFrag, Defn, Example
 
 from .exceptions import unknown_structure, UnknownStructureException, expect_only
-from .template_data import FORM_TEMPLATES, DEFN_TEMPLATES, DERIV_TEMPLATES, NON_GLOSS_TEMPLATES
+from .template_data import (
+    FORM_TEMPLATES,
+    DEFN_TEMPLATES,
+    DERIV_TEMPLATES,
+    NON_GLOSS_TEMPLATES,
+)
 from .template_utils import template_matchers
 from .parse_assoc import proc_lb_template_assoc, proc_text_assoc, mk_assoc_bits
 from .parse_ety import proc_defn_head_template
@@ -21,7 +26,11 @@ GLOSS_TEMPLATE_START = re.compile(r"{{gloss\|")
 
 
 def detect_sense(contents: str) -> bool:
-    if "=" in contents or DEFN_TEMPLATE_START.search(str(contents)) or GLOSS_TEMPLATE_START.search(str(contents)):
+    if (
+        "=" in contents
+        or DEFN_TEMPLATE_START.search(str(contents))
+        or GLOSS_TEMPLATE_START.search(str(contents))
+    ):
         return True
     # XXX: Can probably be more fine grained here
     if has_grammar_word(contents) and "usage" not in contents:
@@ -44,6 +53,7 @@ def detect_new_sense(contents: str) -> bool:
 
 def get_defn_info(defn: str) -> Defn:
     from .textify import expand_templates
+
     raw_defn = defn
     parsed_defn = parse(defn)
     defn_dirty = False
@@ -100,7 +110,10 @@ def proc_defn_form_template(tmpl: Template):
 
 
 def proc_sense(
-    contents: Wikicode, children_result: DefnTreeFrag, non_gloss: bool=False, morph_dict: Optional[Dict] = None
+    contents: Wikicode,
+    children_result: DefnTreeFrag,
+    non_gloss: bool = False,
+    morph_dict: Optional[Dict] = None,
 ) -> DefnTreeFrag:
     result = DefnTreeFrag()
     # Sense

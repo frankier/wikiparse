@@ -169,7 +169,10 @@ def test_empty_defn():
 
 def test_maki_not_gram_note():
     defns, heads = parse_enwiktionary_page("maki", read_data("maki"))
-    assert "a relatively large, usually rounded elevation of earth" in defns["Noun"][0].cleaned_defn
+    assert (
+        "a relatively large, usually rounded elevation of earth"
+        in defns["Noun"][0].cleaned_defn
+    )
 
 
 THING = """

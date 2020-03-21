@@ -1,8 +1,12 @@
 from sqlalchemy.sql import func
 from sqlalchemy.sql import select, literal
 from .tables import (
-    headword, word_sense, inflection_of, etymology,
-    derivation_seg, relation
+    headword,
+    word_sense,
+    inflection_of,
+    etymology,
+    derivation_seg,
+    relation,
 )
 
 WORD_SENSE_COLS = [
@@ -24,29 +28,22 @@ RELATED = [
 
 
 def lemma_info_query_id(name, sense_id):
-    return \
-        select([literal(name).label("headword")] + WORD_SENSE_COLS)\
-        .select_from(
-            word_sense,
-        ).where(
-            word_sense.c.id == sense_id
-        )
+    return (
+        select([literal(name).label("headword")] + WORD_SENSE_COLS)
+        .select_from(word_sense,)
+        .where(word_sense.c.id == sense_id)
+    )
 
 
 def lemma_info_query(lemmas):
-    return \
-        select([
-            headword.c.name,
-        ] + WORD_SENSE_COLS).select_from(
-            headword.join(
-                word_sense,
-                word_sense.c.headword_id == headword.c.id
-            )
-        ).where(
-            headword.c.name.in_(lemmas)
-        ).order_by(
-            headword.c.name, word_sense.c.pos, word_sense.c.etymology_index
+    return (
+        select([headword.c.name] + WORD_SENSE_COLS)
+        .select_from(
+            headword.join(word_sense, word_sense.c.headword_id == headword.c.id)
         )
+        .where(headword.c.name.in_(lemmas))
+        .order_by(headword.c.name, word_sense.c.pos, word_sense.c.etymology_index)
+    )
 
 
 def headword_rels_counts_query(lemmas):
@@ -63,5 +60,7 @@ def headword_rels_counts_query(lemmas):
     from_clause = headword
     for (name, table, col), (table_alias, col_alias) in zip(RELATED, aliases):
         from_clause = from_clause.outerjoin(table_alias, col_alias == headword.c.id)
-    query = select(select_cols).select_from(from_clause).where(headword.c.name.in_(lemmas))
+    query = (
+        select(select_cols).select_from(from_clause).where(headword.c.name.in_(lemmas))
+    )
     return query

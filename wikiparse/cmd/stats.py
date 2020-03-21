@@ -172,4 +172,5 @@ def parse_stats_cov(inf):
 def dump_schema(outf):
     from wikiparse.tables import metadata
     from eralchemy import render_er
+
     render_er(metadata, outf)

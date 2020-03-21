@@ -13,7 +13,6 @@ from os import makedirs
 from os.path import join as pjoin
 import ujson
 from typing import Any, Dict, List, Union, Tuple, Iterator
-import mwxml
 from mwxml.iteration import Dump, page as mwxml_iteration_page
 
 from wikiparse.utils.wikicode import get_heading, get_lead, parse_nested_list
@@ -83,7 +82,6 @@ class EtymologyGatherer:
                 continue
             yield act, path, payload
 
-
     def etymology_heading(self, ety_idx):
         return EtymologyHeading(ety_idx, self.etys, self.poses)
 
@@ -99,9 +97,11 @@ def handle_etymology_sections(
         str_def_title = str(get_heading(def_section))
         if str_def_title.startswith("Etymology "):
             etys = EtymologyGatherer()
-            for act, path, payload in etys.filter(handle_pos_sections(
-                def_section.get_sections(levels=[4]), skip_ety=skip_ety
-            )):
+            for act, path, payload in etys.filter(
+                handle_pos_sections(
+                    def_section.get_sections(levels=[4]), skip_ety=skip_ety
+                )
+            ):
                 yield act, (str_def_title,) + path, payload
             yield "ety-sec-head", (str_def_title,), etys.etymology_heading(
                 get_ety_idx(str_def_title),
@@ -121,14 +121,16 @@ def parse_enwiktionary_page(
         lang_title = get_heading(lang_section)
         if lang_title != "Finnish":
             continue
-        for act, path, payload in etys.filter(orelse(
-            handle_etymology_sections(
-                lang_section.get_sections(levels=[3]), skip_ety=skip_ety
-            ),
-            handle_pos_sections(
-                lang_section.get_sections(levels=[3]), skip_ety=skip_ety
-            ),
-        )):
+        for act, path, payload in etys.filter(
+            orelse(
+                handle_etymology_sections(
+                    lang_section.get_sections(levels=[3]), skip_ety=skip_ety
+                ),
+                handle_pos_sections(
+                    lang_section.get_sections(levels=[3]), skip_ety=skip_ety
+                ),
+            )
+        ):
             if act == "defn":
                 if len(path) == 1:
                     defn_lists[path[0]] = payload
@@ -208,7 +210,7 @@ mwxml_iteration_page.Revision = TextOnlyRevisionMonkeyPatch
 def process_dump(inf, outdir):
     # Dict with DefnListDictTree2L, List[Any]
     def page_info(
-        dump
+        dump,
     ) -> Iterator[Tuple[str, Union[ExceptionWrapper, Dict[str, Any]]]]:
         get_stats_logger().reopen()
         total = 0
