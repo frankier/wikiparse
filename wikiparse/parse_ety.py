@@ -20,6 +20,13 @@ from .utils.iter import orelse
 from typing import List
 
 
+def check_ety(ety: Etymology):
+    if any(not bit.headword for bit in ety.bits):
+        return "exception", mk_unknown_structure("empty-bit-in-ety")
+    else:
+        return "ety-head", ety
+
+
 def proc_ety_only_derivation_template(template: Template):
     template_name = str(template.name)
     if template_name in ("prefix", "suffix", "affix", "compound"):
@@ -66,12 +73,14 @@ def proc_ety_only_derivation_template(template: Template):
             if template.has(alt_param_name):
                 bit["alt"] = str(template.get(alt_param_name).value)
             bits.append(EtymologyBit(**bit))
-        yield "ety-head", Etymology(
-            DerivationType.compound
-            if template_name == "compound"
-            else DerivationType.derivation,
-            bits,
-            str(template),
+        yield check_ety(
+            Etymology(
+                DerivationType.compound
+                if template_name == "compound"
+                else DerivationType.derivation,
+                bits,
+                str(template),
+            )
         )
 
 
@@ -80,13 +89,15 @@ def proc_anywhere_derivation_template(template: Template):
     if template_name in ("comparative of", "superlative of", "agent noun of"):
         # e.g. {{comparative of|banaalisti|POS=adverb|lang=fi}}
         # {{superlative of|banaalisti|POS=adverb|lang=fi}}
-        yield "ety-head", Etymology(
-            DerivationType.derivation,
-            [
-                EtymologyBit(headword=str(lang_template_get(template, 2))),
-                EtymologyBit(headword=TEMPLATE_NORMSEG_MAP[template_name]),
-            ],
-            str(template),
+        yield check_ety(
+            Etymology(
+                DerivationType.derivation,
+                [
+                    EtymologyBit(headword=str(lang_template_get(template, 2))),
+                    EtymologyBit(headword=TEMPLATE_NORMSEG_MAP[template_name]),
+                ],
+                str(template),
+            )
         )
 
 
@@ -203,11 +214,13 @@ def proc_form_template(template: Template):
             inflection_bits.append(str(template.get("suffix").value))
         # XXX: TODO log unprocessed template info
         if len(inflection_bits) > 0:
-            yield "ety-head", Etymology(
-                DerivationType.inflection,
-                [EtymologyBit(headword=child)]
-                + [EtymologyBit(headword=inf) for inf in inflection_bits],
-                str(template),
+            yield check_ety(
+                Etymology(
+                    DerivationType.inflection,
+                    [EtymologyBit(headword=child)]
+                    + [EtymologyBit(headword=inf) for inf in inflection_bits],
+                    str(template),
+                )
             )
 
 

@@ -45,6 +45,7 @@ UNKNOWN_STRUCTURE_MSGS = {
     "mwe-ety": "Multiword expression etymology section not supported yet",
     "multi-template-ety": "Multiple derrivation templates found in etymology",
     "unknown-template-ety": "Unknown template found in etymology: '{}'",
+    "empty-bit-in-ety": "Empty bit in etymology",
 }
 
 
