@@ -26,7 +26,7 @@ def filter_unk(exc):
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 
 
-MIN_LENGTHS = {"kertoa": 3, "pitaa": 8, "saada": 8, "sanoa": 1, "tulla": 7}
+MIN_LENGTHS = {"kertoa": 3, "pitaa": 8, "saada": 8, "sanoa": 1, "tulla": 7, "armo": 2}
 
 
 def read_data(entry):
