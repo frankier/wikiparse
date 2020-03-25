@@ -62,18 +62,23 @@ def stats():
 def tree_parts_from_doc(doc):
     yield (doc["event"],)
     if doc["event"] == "unknown_structure":
-        yield (doc["event"], doc["nick"])
+        if isinstance(doc["nick"], (tuple, list)):
+            nick = doc["nick"]
+        else:
+            nick = (doc["nick"],)
+        for idx in range(len(nick)):
+            yield (doc["event"], *nick[: idx + 1])
         if doc["nick"] == "expect-only":
-            yield (doc["event"], doc["nick"]) + tuple(doc["extra"][0])
+            yield (doc["event"], *nick, *doc["extra"][0])
         elif doc["nick"] == "not-ux-lb":
             for other in doc["extra"][0]:
-                yield (doc["event"], doc["nick"], "|".join(other))
+                yield (doc["event"], *nick, "|".join(other))
         elif doc["nick"] == "lb-fin-unknown":
-            yield (doc["event"], doc["nick"]) + doc["extra"][1]
+            yield (doc["event"], *nick, doc["extra"][1])
         elif doc["nick"] == "unknown-template":
-            yield (doc["event"], doc["nick"]) + doc["extra"]
+            yield (doc["event"], *nick, *doc["extra"])
         elif doc["nick"] == "unknown-template-ety":
-            yield (doc["event"], doc["nick"]) + tuple(doc["extra"][0])
+            yield (doc["event"], *nick, *doc["extra"][0])
 
 
 @stats.command()
