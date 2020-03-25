@@ -17,8 +17,16 @@ class ExceptionWrapper(object):
 UNKNOWN_STRUCTURE_MSGS = {
     # Defns
     "expect-only": "Expected only {}. Got {}",
-    "eng-assoc": "Putting English word '{}' in assoc not allowed.",
-    "non-fin-assoc": "Putting non-Finnish word '{}' in assoc not allowed.",
+    "bad-assoc-bit": (
+        "Unknown content in assoc bit",
+        {
+            "found-gram": "Found a grammar word in '{}'",
+            "too-many-matches": "Too many matches for '{}'",
+            "eng-assoc": "Putting English word '{}' in assoc not allowed.",
+            "non-fin-assoc": "Putting non-Finnish word '{}' in assoc not allowed.",
+            "too-many-tidles": "Too many tidles in assoc. Found '{}'.",
+        },
+    ),
     "lb-fi-unknown": "Can't deal with lb|fi|... {}th template param '{}'",
     "too-many-=s": "Can't deal with too many ='s",
     "no-grammar-=": "Can't deal with = without grammar stuff before it",
@@ -42,13 +50,27 @@ UNKNOWN_STRUCTURE_MSGS = {
 
 class UnknownStructureException(Exception):
     def add_info(self, info):
-        self.args += (info,)
+        self.args = (self.args[0] + "\n" + repr(info),)
 
 
 def mk_unknown_structure(nick, *extra):
-    exc = UnknownStructureException(
-        UNKNOWN_STRUCTURE_MSGS[nick].format(*(repr(e) for e in extra))
-    )
+    if isinstance(nick, tuple):
+        msg_parts = []
+        valid_msg_dict = True
+        msg_dict = UNKNOWN_STRUCTURE_MSGS
+        for nick_bit in nick:
+            if not valid_msg_dict:
+                raise ValueError(f"Invalid nick {nick!r} passed")
+            if isinstance(msg_dict[nick_bit], tuple):
+                msg, msg_dict = msg_dict[nick_bit]
+            else:
+                msg = msg_dict[nick_bit]
+                valid_msg_dict = False
+            msg_parts.append(msg)
+        msg = "\n".join(msg_parts)
+    else:
+        msg = UNKNOWN_STRUCTURE_MSGS[nick]
+    exc = UnknownStructureException(msg.format(*(repr(e) for e in extra)))
     exc.log = {
         "type": "word_event",
         "event": "unknown_structure",
@@ -91,3 +113,29 @@ def strictness(val):
     _strictness = val
     yield
     _strictness = oldval
+
+
+_exception_filter = None
+
+
+def set_exception_filter(exception_filter):
+    global _exception_filter
+    _exception_filter = exception_filter
+
+
+def get_exception_filter():
+    if _exception_filter is None:
+        if get_strictness() == PERMISSIVE:
+            return lambda e: False
+        else:
+            return lambda e: True
+    return _exception_filter
+
+
+@contextmanager
+def exception_filter(val):
+    global _exception_filter
+    oldval = _exception_filter
+    _exception_filter = val
+    yield
+    _exception_filter = oldval

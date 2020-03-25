@@ -25,8 +25,7 @@ from .models import EtymologyHeading
 from .exceptions import (
     ExceptionWrapper,
     UnknownStructureException,
-    get_strictness,
-    PERMISSIVE,
+    get_exception_filter,
 )
 from .utils.iter import orelse
 
@@ -144,10 +143,10 @@ def parse_enwiktionary_page(
             elif act == "head":
                 heads.append(payload.tagged_dict())
             elif act == "exception":
-                if get_strictness() == PERMISSIVE:
-                    logging.exception("Ignored since in permissive mode: %s", payload)
-                else:
+                exception_filter = get_exception_filter()
+                if exception_filter(payload):
                     raise payload
+                logging.exception("Ignored due to exception filter: %s", payload)
                 if hasattr(payload, "log"):
                     loggable = payload.log
                     loggable["word"] = lemma

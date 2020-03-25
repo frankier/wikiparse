@@ -1,7 +1,6 @@
 from langdetect import detect_langs
 from langdetect.lang_detect_exception import LangDetectException
 from typing import Optional
-from ..gram_words import GRAMMAR_WORDS
 import re
 
 
@@ -19,7 +18,3 @@ def detect_fi_en(content: str) -> Optional[str]:
         if lang.lang in OUR_LANGS:
             return lang.lang
     return None
-
-
-def has_grammar_word(txt: str) -> bool:
-    return any(grammar_word in txt for grammar_word in GRAMMAR_WORDS)

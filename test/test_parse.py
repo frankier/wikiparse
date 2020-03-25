@@ -5,10 +5,23 @@ from wikiparse.insert import flatten_senses
 from wikiparse.parse import parse_enwiktionary_page
 from wikiparse.parse_ety import proc_form_template
 from wikiparse.utils.wikicode import parse_nested_list
-from wikiparse.exceptions import EXTRA_STRICT, strictness
+from wikiparse.exceptions import (
+    UnknownStructureException,
+    EXTRA_STRICT,
+    strictness,
+    exception_filter,
+)
 from nose2.tools import params
 from mwparserfromhell import parse
 import ujson
+
+
+def filter_unk(exc):
+    if not isinstance(exc, UnknownStructureException):
+        return True
+    print('exc.log["nick"]', exc.log["nick"])
+    return exc.log["nick"] != "unknown-template-ety"
+
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -30,6 +43,7 @@ def flat_roundtrip_senses(defns):
 
 
 @params(*MIN_LENGTHS.keys())
+@exception_filter(filter_unk)
 def test_parse_min_results(entry):
     """
     Smoke test to check parsing returns a minimum number of definitions.
@@ -44,9 +58,9 @@ def test_parse_min_results(entry):
 
 
 @params("ja", "humalassa", "on", "kertoa", "tulla")
+@strictness(EXTRA_STRICT)
 def test_parse_no_exceptions(entry):
-    with strictness(EXTRA_STRICT):
-        parse_enwiktionary_page(entry, read_data(entry), skip_ety=True)
+    parse_enwiktionary_page(entry, read_data(entry), skip_ety=True)
 
 
 TULLA_LIST = """
@@ -83,6 +97,7 @@ def test_parse_nested_list_tulla():
     assert sum(bool(elem.children) for elem in result) == 6
 
 
+@exception_filter(filter_unk)
 def test_vuotta_head_gram():
     defns, _heads = parse_enwiktionary_page("vuotta", read_data("vuotta"))
     ety1_form = defns["Etymology 1"]["Noun"][0].morph
@@ -96,6 +111,7 @@ def test_vuotta_head_gram():
     ("voima", "voida", "-?ma"),
     ("aivojuovio", "aivo", "juova", "-?io"),
 )
+@exception_filter(filter_unk)
 def test_compound_fi(compound, *subwords):
     defns, heads = parse_enwiktionary_page(compound, read_data(compound))
     found = 0
@@ -128,6 +144,7 @@ def test_form_tags(template_str, expected):
     assert tuple((bit.headword for bit in results[0][1].bits)) == expected
 
 
+@exception_filter(filter_unk)
 def test_pitaa_gram_rm():
     defns, _heads = parse_enwiktionary_page("pitaa", read_data("pitaa"))
     to_like_defn = defns["Verb"][0]
@@ -139,6 +156,7 @@ def test_pitaa_gram_rm():
     assert "=" not in to_prefer_defn.cleaned_defn
 
 
+@exception_filter(filter_unk)
 def test_saattaa():
     defns, heads = parse_enwiktionary_page("saattaa", read_data("saattaa"))
     verb_4_1 = defns["Verb"][3].subsenses[0].cleaned_defn
@@ -167,6 +185,7 @@ def test_empty_defn():
     return
 
 
+@exception_filter(filter_unk)
 def test_maki_not_gram_note():
     defns, heads = parse_enwiktionary_page("maki", read_data("maki"))
     assert (
@@ -185,6 +204,7 @@ THING = """
 """
 
 
+@exception_filter(filter_unk)
 def test_gram_note_has_formatting():
     defns, heads = parse_enwiktionary_page("test", THING)
     assert "thing" in defns["Noun"][0].cleaned_defn

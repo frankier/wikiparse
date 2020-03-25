@@ -6,7 +6,7 @@ from mwparserfromhell import parse
 from dataclasses import asdict
 from .utils.wikicode import double_strip, TextTreeNode, TextTreeList, block_templates
 from .utils.iter import extract
-from .utils.nlp import detect_fi_en, has_grammar_word, BRACKET_RE
+from .utils.nlp import detect_fi_en, BRACKET_RE
 from .models import DefnTreeFrag, Defn, Example
 
 from .exceptions import unknown_structure, UnknownStructureException, expect_only
@@ -17,7 +17,12 @@ from .template_data import (
     NON_GLOSS_TEMPLATES,
 )
 from .template_utils import template_matchers
-from .parse_assoc import proc_lb_template_assoc, proc_text_assoc, mk_assoc_bits
+from .parse_assoc import (
+    proc_lb_template_assoc,
+    proc_text_assoc,
+    mk_assoc_bits,
+    has_grammar_word,
+)
 from .parse_ety import proc_defn_head_template
 
 EARLY_THRESH = 5
