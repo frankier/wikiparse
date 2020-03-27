@@ -2,7 +2,7 @@ import click
 import click_log
 import logging
 from pprint import pprint
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TextIO
 
 from wikiparse.parse import process_dump, parse_enwiktionary_page
 from wikiparse.insert import (
@@ -44,12 +44,14 @@ def parse_file(filename):
     pprint(defns)
 
 
-def insert_dir_inner(db, indir: str):
+def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
     headword_id_map = {}
     all_morphs = []  # type: List[Tuple[int, Optional[Dict]]]
     all_heads = []  # type: List[Tuple[str, Dict[str, Any]]]
 
-    with click.progressbar(IterDirOrTar(indir), label="Inserting defns") as words:
+    with click.progressbar(
+        IterDirOrTar(indir, members), label="Inserting defns"
+    ) as words:
 
         def defns_batch(word_pair):
             lemma_name, wordf = word_pair
@@ -88,6 +90,15 @@ def insert_dir_inner(db, indir: str):
 
 
 @parse.command()
-@click.argument("indir")
-def insert_dir(indir: str):
-    insert_dir_inner(get_session(), indir)
+@click.argument("indir", type=click.Path())
+@click.argument("filterfile", type=click.File(mode="r"), required=False)
+def insert_dir(indir: str, filterfile: Optional[TextIO]):
+    members = None
+    if filterfile is not None:
+        members = []
+        for line in filterfile:
+            word = line.strip()
+            if not word:
+                continue
+            members.append(word)
+    insert_dir_inner(get_session(), indir, members)
