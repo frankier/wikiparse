@@ -16,7 +16,7 @@ from .template_data import (
     DERIV_TEMPLATES,
     NON_GLOSS_TEMPLATES,
 )
-from .template_utils import template_matchers
+from .utils.template import expand_templates, template_matchers
 from .parse_assoc import (
     proc_lb_template_assoc,
     proc_text_assoc,
@@ -57,8 +57,6 @@ def detect_new_sense(contents: str) -> bool:
 
 
 def get_defn_info(defn: str) -> Defn:
-    from .textify import expand_templates
-
     raw_defn = defn
     parsed_defn = parse(defn)
     defn_dirty = False

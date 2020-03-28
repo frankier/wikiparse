@@ -27,11 +27,11 @@ def mk_cmds(metadata):
 
     @db.command()
     def recreate():
-        drop_trunc("DROP TABLE IF EXISTS");
+        drop_trunc("DROP TABLE IF EXISTS")
         create.callback()
 
     @db.command()
     def trunc():
-        drop_trunc("TRUNCATE", "RESTART IDENTITY");
+        drop_trunc("TRUNCATE", "RESTART IDENTITY")
 
     return db

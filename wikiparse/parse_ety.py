@@ -2,7 +2,7 @@ from itertools import count
 from mwparserfromhell.wikicode import Wikicode, Template
 from .exceptions import mk_unknown_structure
 from .template_data import ALL_DERIV_TEMPLATES
-from .template_utils import template_matchers, lang_template_has, lang_template_get
+from .utils.template import template_matchers, lang_template_has, lang_template_get
 from .models import DerivationType, Etymology, EtymologyBit, RelationType, Relation
 from finntk.data.wiktionary_normseg import (
     TEMPLATE_NORMSEG_MAP,
