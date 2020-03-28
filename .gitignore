@@ -4,5 +4,6 @@ __pycache__/
 *.pyc
 /.mypy_cache/
 /pip-wheel-metadata/
+/results/
 /enwiktionary-????????.*
 /enwiktionary-20171001-pages-meta-current.xml.defns/
