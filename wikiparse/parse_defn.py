@@ -17,7 +17,7 @@ from .data.template import (
     NON_GLOSS_TEMPLATES,
 )
 from .utils.template import expand_templates, template_matchers
-from .parse_assoc import (
+from .assoc.parse import (
     proc_lb_template_assoc,
     proc_text_assoc,
     mk_assoc_bits,

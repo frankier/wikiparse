@@ -41,7 +41,7 @@ def template_matchers(templates):
 
 def expand_templates(defn, keep_lb=True, rm_gram=False):
     from mwparserfromhell import parse
-    from wikiparse.parse_assoc import rm_gram_assoc
+    from wikiparse.assoc import rm_gram_assoc
 
     wikicode = parse(defn)
 

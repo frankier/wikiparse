@@ -15,10 +15,10 @@ import re
 from mwparserfromhell import parse
 from typing import List, Tuple
 
-from .utils.nlp import BRACKET_RE, detect_fi_en
-from .utils.wikicode import block_templates, double_strip
-from .models import AssocBits
-from .data.gram_words import (
+from ..utils.nlp import BRACKET_RE, detect_fi_en
+from ..utils.wikicode import block_templates, double_strip
+from ..models import AssocBits
+from ..data.gram_words import (
     ASSOC_POS,
     TRANSITIVITY,
     PERSONAL,
@@ -34,7 +34,7 @@ from .data.gram_words import (
     RELATIONS,
     NOMINAL_WORDS,
 )
-from .exceptions import (
+from ..exceptions import (
     get_strictness,
     EXTRA_STRICT,
     unknown_structure,
