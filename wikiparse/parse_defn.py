@@ -10,7 +10,7 @@ from .utils.nlp import detect_fi_en, BRACKET_RE
 from .models import DefnTreeFrag, Defn, Example
 
 from .exceptions import unknown_structure, UnknownStructureException, expect_only
-from .template_data import (
+from .data.template import (
     FORM_TEMPLATES,
     DEFN_TEMPLATES,
     DERIV_TEMPLATES,

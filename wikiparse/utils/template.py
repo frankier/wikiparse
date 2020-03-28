@@ -1,5 +1,4 @@
 from boltons.setutils import IndexedSet
-from ..template_data import LANG_TEMPLATES
 
 
 def lang_template_idx_adjust(template, idx):
@@ -24,6 +23,8 @@ def lang_template_get(template, idx):
 
 
 def template_matcher(template):
+    from wikiparse.data.template import LANG_TEMPLATES
+
     name = str(template.name)
     if name in LANG_TEMPLATES:
         if template.has("lang"):

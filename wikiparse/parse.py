@@ -18,7 +18,7 @@ from mwxml.iteration import Dump, page as mwxml_iteration_page
 from wikiparse.utils.wikicode import get_heading, get_lead, parse_nested_list
 from wikiparse.utils.stats_log import get_stats_logger, set_curword
 
-from .gram_words import POS
+from .data.gram_words import POS
 from .parse_defn import get_senses
 from .parse_ety import get_ety
 from .models import EtymologyHeading

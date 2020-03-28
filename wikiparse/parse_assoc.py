@@ -18,7 +18,7 @@ from typing import List, Tuple
 from .utils.nlp import BRACKET_RE, detect_fi_en
 from .utils.wikicode import block_templates, double_strip
 from .models import AssocBits
-from .gram_words import (
+from .data.gram_words import (
     ASSOC_POS,
     TRANSITIVITY,
     PERSONAL,
