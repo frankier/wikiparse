@@ -11,7 +11,7 @@ from wikiparse.insert import (
     insert_morph,
     insert_relation,
 )
-from wikiparse.stats_log import install_db_stats_logger
+from wikiparse.utils.stats_log import install_db_stats_logger
 from wikiparse.utils.db import batch_commit, get_session
 from wikiparse.utils.json import json_load
 from wikiparse.utils.std import IterDirOrTar

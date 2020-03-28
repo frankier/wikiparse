@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Union, Tuple, Iterator
 from mwxml.iteration import Dump, page as mwxml_iteration_page
 
 from wikiparse.utils.wikicode import get_heading, get_lead, parse_nested_list
-from wikiparse.stats_log import get_stats_logger, set_curword
+from wikiparse.utils.stats_log import get_stats_logger, set_curword
 
 from .gram_words import POS
 from .parse_defn import get_senses
@@ -146,7 +146,7 @@ def parse_enwiktionary_page(
                 exception_filter = get_exception_filter()
                 if exception_filter(payload):
                     raise payload
-                logging.exception("Ignored due to exception filter: %s", payload)
+                logging.exception("Ignored due to exception filter : %s", payload)
                 if hasattr(payload, "log"):
                     loggable = payload.log
                     loggable["word"] = lemma
