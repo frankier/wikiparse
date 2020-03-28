@@ -1,7 +1,7 @@
 from pprint import pprint
 import click
 from wikiparse.utils.db import get_session
-from wikiparse.queries import lemma_info_query, headword_rels_counts_query, RELATED
+from wikiparse.db.queries import lemma_info_query, headword_rels_counts_query, RELATED
 
 
 @click.group()

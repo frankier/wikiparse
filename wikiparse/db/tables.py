@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Enum, Integer, String, ForeignKey, JSON, MetaData, Table
-from .enums import DerivationType, RelationType
+from ..enums import DerivationType, RelationType
 
 metadata = MetaData()
 

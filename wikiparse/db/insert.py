@@ -1,8 +1,8 @@
-from wikiparse import tables
+from . import tables
 from wikiparse.utils.db import insert_get_id, insert
 from typing import cast, Dict, List, Optional, TypeVar, Tuple, Iterator
-from .models import DictTree2L, DerivationType, RelationType
-from .parse import get_ety_idx
+from ..models import DictTree2L, DerivationType, RelationType
+from ..parse import get_ety_idx
 
 
 T = TypeVar("T")

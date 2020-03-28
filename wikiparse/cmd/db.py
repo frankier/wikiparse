@@ -1,4 +1,4 @@
-from wikiparse.tables import metadata
+from wikiparse.db.tables import metadata
 from .mk_db import mk_cmds
 
 

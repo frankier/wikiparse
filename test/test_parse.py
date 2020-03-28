@@ -1,7 +1,7 @@
 import os
 import re
 from os.path import join as pjoin
-from wikiparse.insert import flatten_senses
+from wikiparse.db.insert import flatten_senses
 from wikiparse.parse import parse_enwiktionary_page
 from wikiparse.parse_ety import proc_form_template
 from wikiparse.utils.wikicode import parse_nested_list

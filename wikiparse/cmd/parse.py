@@ -5,7 +5,7 @@ from pprint import pprint
 from typing import Any, Dict, List, Optional, Tuple, TextIO
 
 from wikiparse.parse import process_dump, parse_enwiktionary_page
-from wikiparse.insert import (
+from wikiparse.db.insert import (
     insert_defns,
     insert_ety_head,
     insert_morph,
