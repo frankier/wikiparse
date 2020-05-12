@@ -1,6 +1,7 @@
 LANG_TEMPLATES = {
     # defn/ex
     "ux",
+    "uxi",
     "lb",
     # ety derivs
     "prefix",
@@ -14,7 +15,13 @@ LANG_TEMPLATES = {
     "agent noun of",
     # defn rels
     "synonym of",
+    "syn of",
+    "synonyms",
     "syn",
+    "antonyms",
+    "ant",
+    "hypernyms",
+    "hyper",
     "alternative form of",
     "alt form",
     "misspelling of",
@@ -39,6 +46,7 @@ DERIV_TEMPLATES = {
 
 NON_GLOSS_TEMPLATES = {
     ("non-gloss definition",),
+    ("n-g",),
 }
 
 ETY_ONLY_DERIV_TEMPLATES = {
@@ -50,7 +58,13 @@ ETY_ONLY_DERIV_TEMPLATES = {
 
 REL_TEMPLATES = {
     ("synonym of", "fi"),
+    ("syn of", "fi"),
+    ("synonyms", "fi"),
     ("syn", "fi"),
+    ("antonyms", "fi"),
+    ("ant", "fi"),
+    ("hypernyms", "fi"),
+    ("hyper", "fi"),
     ("alternative form of", "fi"),
     ("alt form" "fi"),
     ("misspelling of", "fi"),
@@ -68,5 +82,7 @@ DEFN_TEMPLATES = (
     | NON_GLOSS_TEMPLATES
     | {("lb", "fi")}
 )
+
+UX_TEMPLATES = {("ux", "fi"), ("uxi", "fi")}
 
 # TODO: Cross language bor/der/cog
