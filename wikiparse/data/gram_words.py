@@ -35,31 +35,47 @@ POS = [
 TRANSITIVITY = ["transitive", "intransitive"]
 PERS = [
     "3rd-pers. singular",
+    "3rd pers. singular",
+    "3rd-person singular",
+    "3rd person singular",
 ]
 INFS = ["infinitive"]
 PARTICIPLE = ["participle"]
 MOODS = ["conditional", "indicative"]
 PASS = ["passive", "active"]
 PERSONAL = ["impersonal", "personal", "by person"]  # == personal
-ROLE = ["auxiliary"]
+ROLE = ["auxiliary"]  # aka fine grained pos
 TENSE = ["past", "present"]
 # XXX: We can have for example: "in simple past tense" - in this case simple
 # should be removed so we don't try to put it in assoc
 VERB_WORDS = (
     PERS + INFS + PARTICIPLE + MOODS + PASS + TRANSITIVITY + PERSONAL + ROLE + TENSE
 )
+POS_HINT = {"coordinating": "conj"}
 
 
 CASES = [
-    "elative",
-    "essive",
+    # gram (obj)
     "nominative",
-    "partitive",
-    "illative",
     "genitive",
     "genitive-accusative",
     "accusative",
+    "partitive",
+    # internal
+    "inessive",
+    "elative",
+    "illative",
+    # external
+    "adessive",
+    "ablative",
+    "allative",
+    # state-y
+    "essive",
     "translative",
+    # marginal
+    "instructive",
+    "abessive",
+    "commitative",
 ]
 ASSOC_POS = ["noun/adjective", "noun", "adjective"]
 RELATIONS = ["direct object"]

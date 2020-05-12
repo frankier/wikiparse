@@ -1,19 +1,19 @@
 import click
 import click_log
 import logging
+import orjson
 from pprint import pprint
 from typing import Any, Dict, List, Optional, Tuple, TextIO
 
-from wikiparse.parse import process_dump, parse_enwiktionary_page
+from wikiparse.parse import process_dump, process_pages, parse_enwiktionary_page
 from wikiparse.db.insert import (
     insert_defns,
     insert_ety_head,
     insert_morph,
     insert_relation,
 )
-from wikiparse.utils.stats_log import install_db_stats_logger
+from wikiparse.utils.cmd import Mutex
 from wikiparse.utils.db import batch_commit, get_session
-from wikiparse.utils.json import json_load
 from wikiparse.utils.std import IterDirOrTar
 
 
@@ -23,16 +23,75 @@ def parse():
     pass
 
 
-@parse.command()
-@click.argument("inf", type=click.File())
-@click.option("--stats-db")
-@click.option("--outdir")
-def parse_dump(inf, stats_db=None, outdir=None):
+def set_stats_db(_ctx, _param, stats_db):
+    from wikiparse.utils.stats_log import install_db_stats_logger
+
     if stats_db is not None:
         install_db_stats_logger(stats_db)
+
+
+stats_db_opt = click.option(
+    "--stats-db", envvar="STATS_DB", expose_value=False, callback=set_stats_db,
+)
+
+
+def set_mod_data_dir(_ctx, _param, mod_data):
+    from wikiparse.utils.mod_data import set_jsons_path
+
+    if mod_data is not None:
+        set_jsons_path(mod_data)
+
+
+mod_data_opt = click.option(
+    "--mod-data",
+    envvar="MOD_DATA",
+    expose_value=False,
+    callback=set_mod_data_dir,
+    cls=Mutex,
+    required=True,
+    not_required_if=("fsts_dir",),
+)
+
+
+def set_fsts_dir(_ctx, _param, fsts_dir):
+    from wikiparse.utils.fst import LazyFst
+
+    if fsts_dir is not None:
+        LazyFst.set_fst_dir(fsts_dir)
+
+
+fsts_dir_opt = click.option(
+    "--fsts-dir",
+    envvar="FSTS_DIR",
+    expose_value=False,
+    callback=set_fsts_dir,
+    cls=Mutex,
+    required=True,
+    not_required_if=("mod_data",),
+)
+
+
+@parse.command()
+@click.argument("inf", type=click.File())
+@stats_db_opt
+@mod_data_opt
+@fsts_dir_opt
+@click.option("--outdir")
+def parse_dump(inf, stats_db=None, outdir=None):
     logging.basicConfig(filename="example.log", level=logging.DEBUG)
     # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
     process_dump(inf, outdir)
+
+
+@parse.command()
+@click.argument("indir", type=click.Path())
+@stats_db_opt
+@mod_data_opt
+@fsts_dir_opt
+@click.option("--outdir")
+@click.option("--processes", type=int)
+def parse_pages(indir, stats_db=None, outdir=None, processes=None):
+    process_pages(indir, outdir, processes)
 
 
 @parse.command()
@@ -55,7 +114,10 @@ def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
 
         def defns_batch(word_pair):
             lemma_name, wordf = word_pair
-            results = json_load(wordf)
+            # e.g. .snakemake_timestamp
+            if lemma_name.startswith("."):
+                return
+            results = orjson.loads(wordf.read())
             if "defns" in results:
                 defns = results["defns"]
                 headword_id, morphs = insert_defns(db, lemma_name, defns)

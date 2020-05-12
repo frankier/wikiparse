@@ -25,6 +25,8 @@ UNKNOWN_STRUCTURE_MSGS = {
             "eng-assoc": "Putting English word '{}' in assoc not allowed.",
             "non-fin-assoc": "Putting non-Finnish word '{}' in assoc not allowed.",
             "too-many-tidles": "Too many tidles in assoc. Found '{}'.",
+            "unknown-value": "Unknown value obtained from FST. Found '{}: {}'.",
+            "unknown-tag": "Unknown tag obtained from FST. Found '{}'.",
         },
     ),
     "lb-fi-unknown": "Can't deal with lb|fi|... {}th template param '{}'",
@@ -50,35 +52,48 @@ UNKNOWN_STRUCTURE_MSGS = {
 
 
 class UnknownStructureException(Exception):
+    log: Dict[str, Any]
+
+    def __init__(self, nick, *extra):
+        if isinstance(nick, tuple):
+            msg_parts = []
+            valid_msg_dict = True
+            msg_dict = UNKNOWN_STRUCTURE_MSGS
+            for nick_bit in nick:
+                if not valid_msg_dict:
+                    raise ValueError(f"Invalid nick {nick!r} passed")
+                if isinstance(msg_dict[nick_bit], tuple):
+                    msg, msg_dict = msg_dict[nick_bit]
+                else:
+                    msg = msg_dict[nick_bit]
+                    valid_msg_dict = False
+                msg_parts.append(msg)
+            msg = "\n".join(msg_parts)
+            self.nick = nick
+        else:
+            msg = UNKNOWN_STRUCTURE_MSGS[nick]
+            self.nick = (nick,)
+        msg_fmtd = msg.format(*(repr(e) for e in extra))
+        self.message = msg_fmtd
+        self.log = {
+            "type": "word_event",
+            "event": "unknown_structure",
+            "nick": nick,
+            "extra": extra,
+        }
+
     def add_info(self, info):
-        self.args = (self.args[0] + "\n" + repr(info),)
+        self.message += "\n" + repr(info)
+
+    def add_span(self, span):
+        self.log["extra"] += (span.typ.name,)
+
+    def __str__(self):
+        return self.message
 
 
 def mk_unknown_structure(nick, *extra):
-    if isinstance(nick, tuple):
-        msg_parts = []
-        valid_msg_dict = True
-        msg_dict = UNKNOWN_STRUCTURE_MSGS
-        for nick_bit in nick:
-            if not valid_msg_dict:
-                raise ValueError(f"Invalid nick {nick!r} passed")
-            if isinstance(msg_dict[nick_bit], tuple):
-                msg, msg_dict = msg_dict[nick_bit]
-            else:
-                msg = msg_dict[nick_bit]
-                valid_msg_dict = False
-            msg_parts.append(msg)
-        msg = "\n".join(msg_parts)
-    else:
-        msg = UNKNOWN_STRUCTURE_MSGS[nick]
-    exc = UnknownStructureException(msg.format(*(repr(e) for e in extra)))
-    exc.log = {
-        "type": "word_event",
-        "event": "unknown_structure",
-        "nick": nick,
-        "extra": extra,
-    }
-    return exc
+    return UnknownStructureException(nick, *extra)
 
 
 def unknown_structure(nick, *extra):
@@ -140,3 +155,11 @@ def exception_filter(val):
     _exception_filter = val
     yield
     _exception_filter = oldval
+
+
+class ParseException(Exception):
+    pass
+
+
+class InterpretException(Exception):
+    pass

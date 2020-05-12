@@ -1,6 +1,6 @@
 from uuid import uuid4
 from sqlitedict import SqliteDict
-import json
+import orjson
 
 
 class DbStatsLogger:
@@ -11,8 +11,8 @@ class DbStatsLogger:
     def reopen(self):
         self.db = SqliteDict(
             self.dbfn,
-            encode=json.dumps,
-            decode=json.loads,
+            encode=orjson.dumps,
+            decode=orjson.loads,
             autocommit=True,
             journal_mode="WAL",
         )
@@ -39,11 +39,3 @@ def get_stats_logger():
 def install_db_stats_logger(dbfn):
     global _stats_logger
     _stats_logger = DbStatsLogger(dbfn)
-
-
-_curword = None
-
-
-def set_curword(curword):
-    global _curword
-    _curword = curword

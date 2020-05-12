@@ -1,6 +1,7 @@
 import os
 import re
 from os.path import join as pjoin
+from wikiparse.assoc import is_bad_assoc
 from wikiparse.db.insert import flatten_senses
 from wikiparse.parse import parse_enwiktionary_page
 from wikiparse.parse_ety import proc_form_template
@@ -11,38 +12,51 @@ from wikiparse.exceptions import (
     strictness,
     exception_filter,
 )
-from nose2.tools import params
+import pytest
 from mwparserfromhell import parse
-import ujson
+from wikiparse.utils.json import dumps
+import orjson
 
 
 def filter_unk(exc):
     if not isinstance(exc, UnknownStructureException):
         return True
-    print('exc.log["nick"]', exc.log["nick"])
-    return exc.log["nick"] != "unknown-template-ety"
+    nick = exc.log["nick"]
+    if nick == "unknown-template-ety":
+        return False
+    if is_bad_assoc(exc) and exc.log["extra"][0] != "lb_template":
+        return False
+    return True
 
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 
 
-MIN_LENGTHS = {"kertoa": 3, "pitaa": 8, "saada": 8, "sanoa": 1, "tulla": 7, "armo": 2}
+MIN_LENGTHS = {
+    "kertoa": 3,
+    "pitaa": 8,
+    "saada": 8,
+    "sanoa": 1,
+    "tulla": 7,
+    "armo": 2,
+    "bakteriologi": 1,
+}
 
 
 def read_data(entry):
-    data_dir = pjoin(cur_dir, "data")
+    data_dir = pjoin(cur_dir, "data", "words")
     return open(pjoin(data_dir, entry)).read()
 
 
 def flat_roundtrip_senses(defns):
     res = {}
-    roundtripped = ujson.loads(ujson.dumps(defns))
+    roundtripped = orjson.loads(dumps(defns))
     for full_id, _ety, _pos, sense in flatten_senses(roundtripped):
         res[full_id] = sense
     return res
 
 
-@params(*MIN_LENGTHS.keys())
+@pytest.mark.parametrize("entry", MIN_LENGTHS.keys())
 @exception_filter(filter_unk)
 def test_parse_min_results(entry):
     """
@@ -57,7 +71,7 @@ def test_parse_min_results(entry):
     )
 
 
-@params("ja", "humalassa", "on", "kertoa", "tulla")
+@pytest.mark.parametrize("entry", ["ja", "humalassa", "on", "kertoa", "tulla"])
 @strictness(EXTRA_STRICT)
 def test_parse_no_exceptions(entry):
     parse_enwiktionary_page(entry, read_data(entry), skip_ety=True)
@@ -106,13 +120,16 @@ def test_vuotta_head_gram():
     assert ety2_form and ety2_form["case"] == "partitive"
 
 
-@params(
-    ("ammattikorkeakoulu", "ammatti", "korkeakoulu"),
-    ("voima", "voida", "-?ma"),
-    ("aivojuovio", "aivo", "juova", "-?io"),
+@pytest.mark.parametrize(
+    "compound,subwords",
+    [
+        ("ammattikorkeakoulu", ("ammatti", "korkeakoulu")),
+        ("voima", ("voida", "-?ma")),
+        ("aivojuovio", ("aivo", "juova", "-?io")),
+    ],
 )
 @exception_filter(filter_unk)
-def test_compound_fi(compound, *subwords):
+def test_compound_fi(compound, subwords):
     defns, heads = parse_enwiktionary_page(compound, read_data(compound))
     found = 0
     for head in heads:
@@ -127,13 +144,16 @@ def test_compound_fi(compound, *subwords):
     assert found == 1
 
 
-@params(
-    (
-        "{{fi-form of|käydä|pr=first person|pl=singular|mood=indicative|tense=present}}",
-        ("käydä", "-n"),
-    ),
-    ("{{fi-participle of|t=nega|puhua}}", ("puhua", "-ma", "-ton")),
-    ("{{fi-form of|mikä|case=translative|pl=singular}}", ("mikä", "-ksi")),
+@pytest.mark.parametrize(
+    "template_str,expected",
+    [
+        (
+            "{{fi-form of|käydä|pr=first person|pl=singular|mood=indicative|tense=present}}",
+            ("käydä", "-n"),
+        ),
+        ("{{fi-participle of|t=nega|puhua}}", ("puhua", "-ma", "-ton")),
+        ("{{fi-form of|mikä|case=translative|pl=singular}}", ("mikä", "-ksi")),
+    ],
 )
 def test_form_tags(template_str, expected):
     wikicode = parse(template_str)
@@ -147,13 +167,9 @@ def test_form_tags(template_str, expected):
 @exception_filter(filter_unk)
 def test_pitaa_gram_rm():
     defns, _heads = parse_enwiktionary_page("pitaa", read_data("pitaa"))
-    to_like_defn = defns["Verb"][0]
+    to_like_defn = defns["Verb"][2]
     assert "like" in to_like_defn.cleaned_defn
     assert "elative" not in to_like_defn.cleaned_defn
-    to_prefer_defn = to_like_defn.subsenses[0]
-    assert "prefer" in to_prefer_defn.cleaned_defn
-    assert "elative" not in to_prefer_defn.cleaned_defn
-    assert "=" not in to_prefer_defn.cleaned_defn
 
 
 @exception_filter(filter_unk)

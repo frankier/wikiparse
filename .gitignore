@@ -7,3 +7,8 @@ __pycache__/
 /results/
 /enwiktionary-????????.*
 /enwiktionary-20171001-pages-meta-current.xml.defns/
+/dumplabels/*.json
+/dumplabels/Scribunto
+/dumpsplit/target
+/.snakemake/
+.mypy_cache/

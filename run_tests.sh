@@ -1,1 +1,1 @@
-poetry run nose2 test
+poetry run pytest test/

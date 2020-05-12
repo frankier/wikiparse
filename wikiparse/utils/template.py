@@ -41,7 +41,7 @@ def template_matchers(templates):
 
 def expand_templates(defn, keep_lb=True, rm_gram=False):
     from mwparserfromhell import parse
-    from wikiparse.assoc import rm_gram_assoc
+    from wikiparse.assoc.identispan import identispan_text_rm
 
     wikicode = parse(defn)
 
@@ -57,6 +57,6 @@ def expand_templates(defn, keep_lb=True, rm_gram=False):
 
     defn = str(wikicode)
     if rm_gram:
-        defn = rm_gram_assoc(defn)
+        defn = identispan_text_rm(defn)
 
     return defn

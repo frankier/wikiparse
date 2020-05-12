@@ -1,7 +1,7 @@
 import enum
 
 
-class DerivationType(enum.Enum):
+class DerivationType(enum.IntEnum):
     unknown = 0
     inflection = 1
     derivation = 2
@@ -10,7 +10,7 @@ class DerivationType(enum.Enum):
     multiple = 5
 
 
-class RelationType(enum.Enum):
+class RelationType(enum.IntEnum):
     unknown = 0
     synonym = 1
     antonym = 2

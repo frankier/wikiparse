@@ -103,7 +103,7 @@ def insert_ety_head(session, lemma: str, ety_head, headword_id_map):
             session,
             tables.derivation,
             etymology_id=ety_head_id,
-            type=DerivationType(ety.pop("type")["value"]),
+            type=DerivationType(ety.pop("type")),
             extra={"raw_frag": ety.pop("raw_frag")},
         )
         for bit in ety.pop("bits"):
@@ -125,7 +125,7 @@ def insert_relation(session, lemma: str, rel, headword_id_map):
         tables.relation,
         parent_id=parent_lemma_id,
         child_id=lemma_id,
-        type=RelationType(rel.pop("type")["value"]),
+        type=RelationType(rel.pop("type")),
         extra={"raw_frag": rel.pop("raw_frag")},
     )
 

@@ -1,4 +1,4 @@
-import json
+import orjson
 from sqlitedict import SqliteDict
 import wordfreq
 from wordfreq.preprocess import preprocess_text, MULTI_DIGIT_RE
@@ -90,7 +90,7 @@ def parse_stats_agg(inf, outf):
     unknown_pos_titles = set()
     print("Loading into counters")
     with SqliteDict(
-        inf, encode=json.dumps, decode=json.loads, journal_mode="WAL"
+        inf, encode=orjson.dumps, decode=orjson.loads, journal_mode="WAL"
     ) as db:
         for doc in db.values():
             if doc["type"] == "word_event":
