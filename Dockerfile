@@ -13,7 +13,7 @@ WORKDIR /app
 
 COPY pyproject.toml pyproject.toml
 
-RUN ~/.poetry/bin/poetry config settings.virtualenvs.create false && \
+RUN ~/.poetry/bin/poetry config virtualenvs.create false && \
     ~/.poetry/bin/poetry install
 
 COPY . /app
