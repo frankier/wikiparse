@@ -18,4 +18,4 @@ RUN ~/.poetry/bin/poetry config settings.virtualenvs.create false && \
 
 COPY . /app
 
-CMD python3 parse.py
+CMD snakemake
