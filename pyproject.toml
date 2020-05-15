@@ -27,7 +27,6 @@ hfst = "^3.15.0-beta.0"
 typing_extensions = "^3.7.4"
 snakemake = "^5.16.0"
 orjson = "^3.0.0"
-pytest = "^5.4.1"
 prettyprinter = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
@@ -36,6 +35,7 @@ flake8 = "^3.5.0"
 pre-commit = "^1.10.2"
 mypy = "*"
 black = "^19.10b0"
+pytest = "^5.4.1"
 
 [tool.poetry.extras]
 pgsql = ["psycopg2"]
