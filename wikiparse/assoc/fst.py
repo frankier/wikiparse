@@ -158,7 +158,10 @@ def build_bit_fst():
     )
 
     # Headword
-    headword_fst = fst_frombits(maptoks((esc("~"),), ("rel", "headword")))
+    headword_fst = fst_fromseq(
+        maptoks((esc("~"),), ("rel", "headword")),
+        "([by person] : 0)",  # The default for verbal headwords...
+    )
 
     # Symbols
     emph_symbols = union(
