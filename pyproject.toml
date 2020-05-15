@@ -28,6 +28,7 @@ typing_extensions = "^3.7.4"
 snakemake = "^5.16.0"
 orjson = "^3.0.0"
 pytest = "^5.4.1"
+prettyprinter = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
 "nose2" = "*"
