@@ -105,13 +105,13 @@ def fst_fromseq(*exprs):
 
 def finalise_transducer(transducer):
     transducer.minimize()
-    transducer.lookup_optimize()
+    # transducer.lookup_optimize()
     return transducer
 
 
 def lookup_tokens(fst, tokens_tup):
     for _, output in fst.lookup(tokens_tup, output="raw"):
-        yield tuple((tok for tok in output if tok))
+        yield tuple((tok for tok in output if tok and tok != hfst.EPSILON))
 
 
 def save(fst, outf):
@@ -129,6 +129,15 @@ def load(inf):
 
 
 registry = {}
+
+
+def fst2tokfst(fst):
+    from hfst import EPSILON, UNKNOWN, IDENTITY
+
+    for sym in fst.get_alphabet():
+        if sym in (EPSILON, UNKNOWN, IDENTITY, ""):
+            continue
+        fst.substitute(sym, sym + " ", input=True, output=False)
 
 
 class LazyFst:
@@ -175,6 +184,7 @@ class LazyFst:
                 self.load_fsts(True)
             else:
                 self._bare_fst = self.build_fst()
+                fst2tokfst(self._bare_fst)
         return self._bare_fst.copy()
 
     def build_match_at_start_fst(self):
@@ -205,7 +215,7 @@ class LazyFst:
         self, tokens: List[str], longest_only=False
     ) -> List[Tuple[List[str], List[str]]]:
         results = []
-        tokens_tup = tuple(tokens)
+        tokens_tup = tuple((tok + " " for tok in tokens))
         match_start_res = lookup_tokens(self.get_match_at_start_fst(), tokens_tup)
         if longest_only:
             new_match_start_res: List[List[str]] = []
