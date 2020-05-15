@@ -1,4 +1,4 @@
-FROM python:3.7-alpine
+FROM python:3.7-buster
 
 RUN apk --no-cache --update-cache add gcc gfortran python python-dev py-pip build-base wget freetype-dev libpng-dev openblas-dev curl
 RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
