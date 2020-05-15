@@ -1,7 +1,10 @@
 FROM python:3.7-buster
 
-RUN apk --no-cache --update-cache add gcc gfortran python python-dev py-pip build-base wget freetype-dev libpng-dev openblas-dev curl
-RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
+RUN apt-get update && apt-get install -y \
+        # Build base
+        gcc gfortran build-essential wget curl \
+        # Python stuff
+        python3 python3-dev python3-pip
 
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python3
