@@ -163,7 +163,7 @@ def filter_double_headword(tokens: Iterator[Token]) -> Iterator[Token]:
 
 def lex_bit(ctx: ParseContext, fst: LazyFst, bit: str) -> Iterator[Token]:
     stripped = bit  # parse(bit).strip_code()
-    tokenizer = RegexpTokenizer(r"[^\s'/\[\]]+|'+|/|\[\[|\]\]")
+    tokenizer = RegexpTokenizer(r"[^\s'/\[\];]+|'+|/|\[\[|\]\]|;")
     tokens = tokenizer.tokenize(stripped)
     tokens = ["~" if tok == ctx.headword else tok for tok in tokens]
     yield from filter_double_headword(lex_bit_tokens(ctx, fst, tokens))
