@@ -196,14 +196,20 @@ class LazyFst:
 
     def get_match_at_start_fst(self):
         if self._match_at_start_fst is None:
-            self._match_at_start_fst = finalise_transducer(
-                self.build_match_at_start_fst()
-            )
+            if self.fst_dir is not None:
+                self.load_fsts()
+            else:
+                self._match_at_start_fst = finalise_transducer(
+                    self.build_match_at_start_fst()
+                )
         return self._match_at_start_fst
 
     def get_fst(self):
         if self._fst is None:
-            self._fst = finalise_transducer(self.get_bare_fst())
+            if self.fst_dir is not None:
+                self.load_fsts()
+            else:
+                self._fst = finalise_transducer(self.get_bare_fst())
         if self.assert_non_empty:
             results = list(lookup_tokens(self._fst, ()))
             assert (
