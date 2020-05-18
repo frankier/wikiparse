@@ -18,7 +18,7 @@ version = "1.3.0"
 pyyaml = "*"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Atomic file writes."
 marker = "sys_platform == \"win32\""
 name = "atomicwrites"
@@ -158,7 +158,7 @@ click = "*"
 [[package]]
 category = "main"
 description = "Cross-platform colored terminal text."
-marker = "sys_platform == \"win32\" or platform_system == \"Windows\""
+marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
 name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -330,14 +330,6 @@ version = "3.1.1"
 
 [package.dependencies]
 gitdb = ">=4.0.1,<5"
-
-[[package]]
-category = "main"
-description = "Python interface for HFST"
-name = "hfst"
-optional = false
-python-versions = "*"
-version = "3.15.0.0b0"
 
 [[package]]
 category = "dev"
@@ -661,7 +653,7 @@ python-versions = ">=3.6"
 version = "3.0.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Core utilities for Python packages"
 name = "packaging"
 optional = false
@@ -705,7 +697,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "0.6.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "plugin and hook calling mechanisms for python"
 name = "pluggy"
 optional = false
@@ -793,7 +785,7 @@ version = "5.7.0"
 enum = ["enum34"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "library with cross-python path, ini-parsing, io, code, log facilities"
 name = "py"
 optional = false
@@ -852,7 +844,7 @@ version = "0.9.3"
 rsa = ["cryptography"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python parsing module"
 name = "pyparsing"
 optional = false
@@ -871,7 +863,7 @@ version = "0.15.6"
 six = "*"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "pytest: simple powerful testing with Python"
 name = "pytest"
 optional = false
@@ -918,7 +910,7 @@ version = "2019.3"
 [[package]]
 category = "main"
 description = "Python for Window Extensions"
-marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
+marker = "sys_platform == \"win32\" or platform_system == \"Windows\""
 name = "pywin32"
 optional = false
 python-versions = "*"
@@ -1185,7 +1177,7 @@ docs = ["sphinx (>=1.8.0,<2)", "towncrier (>=18.5.0)", "sphinx-rtd-theme (>=0.4.
 testing = ["pytest (>=4.0.0,<5)", "coverage (>=4.5.0,<5)", "pytest-timeout (>=1.3.0,<2)", "six (>=1.10.0,<2)", "pytest-xdist", "pytest-localserver", "pypiserver", "mock", "xonsh"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Measures number of Terminal column cells of wide-character codes"
 name = "wcwidth"
 optional = false
@@ -1237,7 +1229,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 pgsql = []
 
 [metadata]
-content-hash = "ca05579360853090c37e2fe85c0d7dc0d8e8d7cbce22b51237d77beca249b306"
+content-hash = "236dea035eeee37f3fa552dca518d1affdeeb1b6a0cc003874c8cdd680403471"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -1420,20 +1412,6 @@ gitdb = [
 gitpython = [
     {file = "GitPython-3.1.1-py3-none-any.whl", hash = "sha256:71b8dad7409efbdae4930f2b0b646aaeccce292484ffa0bc74f1195582578b3d"},
     {file = "GitPython-3.1.1.tar.gz", hash = "sha256:6d4f10e2aaad1864bb0f17ec06a2c2831534140e5883c350d58b4e85189dab74"},
-]
-hfst = [
-    {file = "hfst-3.15.0.0b0-cp27-cp27m-macosx_10_7_x86_64.whl", hash = "sha256:3c26b641c05578ce7f3d8ac2f8ba51a173a535a7760756d3829d1d052631a230"},
-    {file = "hfst-3.15.0.0b0-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:ce56058a2342cafa97e6866a3039b5841827a5f8880922e68bcb823516efe5f4"},
-    {file = "hfst-3.15.0.0b0-cp34-cp34m-manylinux1_x86_64.whl", hash = "sha256:e8fa4434df19833c054e3b4b4d22570719afb38d0c853a3ee90f79c30a38023b"},
-    {file = "hfst-3.15.0.0b0-cp35-cp35m-macosx_10_7_x86_64.whl", hash = "sha256:e9bca59f1ed2b4ed10ff0f017186b0f097abd89229537a68c83a73b493000030"},
-    {file = "hfst-3.15.0.0b0-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:a5423c33b026d06f726b9289fe84c183d0bb1f65529af0f488e64bbfd6d37eb7"},
-    {file = "hfst-3.15.0.0b0-cp35-cp35m-win32.whl", hash = "sha256:f67516a45e71822a144361f199f7e3bdcd20014d21e44b875c5cf143badc01a3"},
-    {file = "hfst-3.15.0.0b0-cp36-cp36m-macosx_10_7_x86_64.whl", hash = "sha256:3e1fae730a930e64f980035974e3e6a74823c1c34dd7b8f00ea71abf599a0559"},
-    {file = "hfst-3.15.0.0b0-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:c10c2eb06fcdd56c3112978dd768d5c8bc20f4838773f435b00453015ad54104"},
-    {file = "hfst-3.15.0.0b0-cp36-cp36m-win32.whl", hash = "sha256:8884e529cb2bea9ad6389182c0b65851567c84168f0b7d8249d8711e95116057"},
-    {file = "hfst-3.15.0.0b0-cp37-cp37m-macosx_10_7_x86_64.whl", hash = "sha256:78bab26574def77f5a66941c8a0500f3aa6bcc9930149378ecd249127eabc82a"},
-    {file = "hfst-3.15.0.0b0-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:bc490c1575ce83c48112f0a6cccb72fd512d62be9d3788754c89febce334eac1"},
-    {file = "hfst-3.15.0.0b0-cp37-cp37m-win32.whl", hash = "sha256:8a39829ab866c84f440b2c5c517a87007754e502214c59873a60270309ffb45b"},
 ]
 identify = [
     {file = "identify-1.4.9-py2.py3-none-any.whl", hash = "sha256:72e9c4ed3bc713c7045b762b0d2e2115c572b85abfc1f4604f5a4fd4c6642b71"},
