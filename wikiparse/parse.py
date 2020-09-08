@@ -22,6 +22,7 @@ from wikiparse.utils.json import dumps
 
 from .context import ParseContext
 from .data.gram_words import POS
+from .parse_deriv import get_deriv
 from .parse_defn import get_senses
 from .parse_ety import get_ety
 from .models import EtymologyHeading
@@ -38,6 +39,15 @@ DetectorFactory.seed = 0
 
 def get_ety_idx(etymology):
     return int(etymology.split(" ")[-1])
+
+
+def handle_pos_specific_sections(
+    ctx: ParseContext, sections: List[Wikicode]
+) -> Iterator[Tuple[str, Any]]:
+    for pos_spec_section in sections:
+        str_def_title = str(get_heading(pos_spec_section)).strip()
+        if str_def_title == "Derived terms":
+            yield from get_deriv(ctx, pos_spec_section)
 
 
 def handle_pos_sections(
@@ -61,6 +71,10 @@ def handle_pos_sections(
                 def_section.remove(def_section.get(0))
                 definitions = get_lead(def_section)
                 for act, payload in get_senses(ctx, parse_nested_list(definitions)):
+                    yield act, (str_def_title,), payload
+                for act, payload in handle_pos_specific_sections(
+                    ctx, def_section.get_sections()
+                ):
                     yield act, (str_def_title,), payload
             else:
                 get_stats_logger().append(
@@ -145,6 +159,10 @@ def parse_enwiktionary_page(
                 got_ety_sec_head = True
                 heads.append(payload.tagged_dict())
             elif act == "head":
+                heads.append(payload.tagged_dict())
+            elif act == "deriv":
+                # TODO: Doesn't 100% make sense as head since it often appears
+                # under a POS section so we are losing information here atm
                 heads.append(payload.tagged_dict())
             elif act == "exception":
                 exception_filter = get_exception_filter()

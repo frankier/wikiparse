@@ -57,6 +57,63 @@ def merge_assoc_words(a1: AssocWord, a2: AssocWord) -> Optional[AssocWord]:
     return res
 
 
+def merge_split_assoc_words(assoc_words: List[AssocWord]) -> List[AssocWord]:
+    """
+    This function merges all groups of AssocWords, apart from when an AssocWord
+    with a `form' appears on the right side in which case a new group is
+    started again.
+
+    Conversely, if an AssocWord has a form which is a multiword, it is split.
+    """
+
+    def push_assoc_word():
+        nonlocal head_is_empty
+        accs.append(AssocWord())
+        head_is_empty = True
+
+    head_is_empty = False
+    accs: List[AssocWord] = []
+    push_assoc_word()
+
+    for assoc_word in assoc_words:
+        if not head_is_empty and (assoc_word.form or assoc_word.word_type == WordType.headword):
+            # Start new new group
+            push_assoc_word()
+        if assoc_word.form and " " in assoc_word.form:
+            # Split a multiword
+            assert not assoc_word.inflection_bits and not assoc_word.gram_role_bits
+            # TODO: Should something be done with assoc_word.link in this case?
+            # Can it be split too? Something else?
+            bits = assoc_word.form.strip().split(" ")
+            for bit in bits:
+                accs[-1] = AssocWord(
+                    word_type=assoc_word.word_type, form=assoc_word.form,
+                )
+                push_assoc_word()
+        else:
+            # Merge into current head acc
+            new_acc = merge_assoc_words(accs[-1], assoc_word)
+            if new_acc is None:
+                raise InterpretException(f"Can't merge bits {assoc_words}")
+            accs[-1] = new_acc
+            head_is_empty = False
+    if head_is_empty:
+        accs = accs[:-1]
+    return accs
+
+
+def convert_simple_asssoc_word_seq_plus(node: AssocNode):
+    if isinstance(node, AssocWordSeq):
+        if all(isinstance(child, AssocWord) for child in node.children):
+            return PlusNode.from_contents(node.contents())
+        else:
+            return map_contents(walk_merge_assoc_word_seq, node)
+    elif isinstance(node, ContainerNode):
+        return map_contents(walk_merge_assoc_word_seq, node)
+    else:
+        return node
+
+
 def merge_many_assoc_words(assoc_words: List[AssocWord]) -> AssocWord:
     acc = AssocWord()
     for assoc_word in assoc_words:
@@ -76,11 +133,11 @@ def walk_merge_assoc_word_seq(node: AssocNode):
                 assoc_words.append(node)
             else:
                 others.append(node)
-        merged = merge_many_assoc_words(assoc_words)
-        if others:
-            return AssocWordSeq([merged, *others])
+        merged = merge_split_assoc_words(assoc_words)
+        if others or len(merged) > 1:
+            return AssocWordSeq([*merged, *others])
         else:
-            return merged
+            return merged[0]
     elif isinstance(node, ContainerNode):
         return map_contents(walk_merge_assoc_word_seq, node)
     else:
@@ -89,6 +146,10 @@ def walk_merge_assoc_word_seq(node: AssocNode):
 
 def is_root(node: AssocNode):
     return isinstance(node, (AssocNodeOr, PlusNode))
+
+
+def is_root_seq(node: AssocNode):
+    return isinstance(node, (AssocNodeOr, PlusNode, AssocWordSeq))
 
 
 def is_assoc_word(node: AssocNode):
@@ -158,6 +219,7 @@ def ensure_headword(ctx: ParseContext, root: PlusNode):
 
     # Step 4.0 (Done at lexing stage) If there is a 3rd pers sing. it is
     #          the headword -- even in preference to '~'
+    #          TODO: implement also for ``personal''
     if any(
         (
             isinstance(child, AssocWord) and child.word_type == WordType.headword
@@ -211,7 +273,9 @@ def remove_empty_plusnodes(node: AssocNode):
     return node
 
 
-def interpret_trees(ctx: ParseContext, trees_iter: Iterable[Tuple[int, AssocNode]]):
+def interpret_trees(
+    ctx: ParseContext, trees_iter: Iterable[Tuple[int, AssocNode]]
+) -> Iterator[Tuple[AssocNode, bool]]:
     for _cost, tree in trees_iter:
         # If it doesn't have any grams -- it's not work interpreting
         has_gram = tree_has_gram(tree)
@@ -230,8 +294,10 @@ def interpret_trees(ctx: ParseContext, trees_iter: Iterable[Tuple[int, AssocNode
         without_empty_plus = remove_empty_plusnodes(merged_tree)
         print("without_empty_plus")
         pprint(without_empty_plus)
+        # Step 1.ii Find any AssocWordSeqs with only simple AssocWords in them and convert to PlusNode
+        synth_plus = convert_simple_asssoc_word_seq_plus(without_empty_plus)
         # Step 2. Find potential root node
-        root, others = get_root(is_root, without_empty_plus)
+        root, others = get_root(is_root, synth_plus)
         if root:
             pass  # root reason = only plus
         else:

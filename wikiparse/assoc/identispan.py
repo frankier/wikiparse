@@ -9,6 +9,7 @@ from typing import List, Iterable, Optional
 from ..data.gram_words import GRAMMAR_WORDS
 from ..exceptions import unknown_structure
 from .models import AssocSpan, AssocSpanType
+from mwparserfromhell import parse
 
 
 GRAMMAR_WORD_RE_STR = r"\b({})\b".format("|".join(GRAMMAR_WORDS))
@@ -69,14 +70,14 @@ def identispan_text(defn: str) -> List[AssocSpan]:
                 AssocSpan(typ=AssocSpanType.bracket, payload=bracket.strip("()"),)
             )
             before = before.replace(bracket, "")
-        spans.append(AssocSpan(typ=AssocSpanType.before_eq, payload=before,))
+        spans.append(AssocSpan(typ=AssocSpanType.before_eq, payload=parse(before)))
         return spans
     else:
         for match_text in iter_grammar_notes(defn):
             spans.append(
                 AssocSpan(
                     typ=AssocSpanType.bracket,
-                    payload=match_text.strip().strip("()").strip(),
+                    payload=parse(match_text.strip().strip("()").strip()),
                 )
             )
             defn = defn.replace(match_text, "")
@@ -84,7 +85,6 @@ def identispan_text(defn: str) -> List[AssocSpan]:
 
 
 def identispan_all(defn: str) -> List[AssocSpan]:
-    from mwparserfromhell import parse
     from ..utils.wikicode import block_templates
 
     result: List[AssocSpan] = []

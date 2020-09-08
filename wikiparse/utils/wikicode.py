@@ -11,7 +11,7 @@ INLINE_TEMPLATES = ["link", "l", "mention", "m", "qualifier", "gloss"]
 
 
 def get_heading_node(wikicode: Wikicode):
-    return next(wikicode.ifilter_headings())
+    return next(wikicode.ifilter_headings(), None)
 
 
 def get_heading_string(heading_node: Wikicode):
@@ -19,7 +19,10 @@ def get_heading_string(heading_node: Wikicode):
 
 
 def get_heading(wikicode: Wikicode):
-    return get_heading_string(get_heading_node(wikicode))
+    node = get_heading_node(wikicode)
+    if node is None:
+        return None
+    return get_heading_string(node)
 
 
 def get_lead(wikicode: Wikicode):

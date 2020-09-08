@@ -107,3 +107,6 @@ rule proc_stats:
         "python parse.py parse-stats-agg {input.stats_db} {output.agg_csv}" + 
         " && python parse.py parse-stats-cov {output.agg_csv} > {output.cov}" + 
         " && python parse.py parse-stats-probs {output.agg_csv} > {output.probs}"
+
+onsuccess:
+    shell("cp {log} " + LOG + "/snakemake.log")

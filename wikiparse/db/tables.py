@@ -66,6 +66,17 @@ relation = Table(
     Column("extra", JSON, nullable=False),
 )
 
+derived_term = Table(
+    "derived_term",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("headword_id", Integer, ForeignKey("headword.id"), nullable=False),
+    Column("derived_id", Integer, ForeignKey("headword.id"), nullable=True),
+    Column("disp", String, nullable=False),
+    Column("gloss", String, nullable=False),
+    Column("extra", JSON, nullable=False),
+)
+
 word_sense = Table(
     "word_sense",
     metadata,

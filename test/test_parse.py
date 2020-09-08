@@ -225,3 +225,13 @@ def test_gram_note_has_formatting():
     defns, heads = parse_enwiktionary_page("test", THING)
     assert "thing" in defns["Noun"][0].cleaned_defn
     assert "elative" not in defns["Noun"][0].cleaned_defn
+
+
+def test_derived_terms_pitaa():
+    _defns, heads = parse_enwiktionary_page("pitää", read_data("pitaa"))
+    found = 0
+    for head in heads:
+        if head["tag"] != "deriv":
+            continue
+        found += 1
+    assert 24 <= found <= 27

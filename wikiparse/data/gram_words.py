@@ -43,13 +43,26 @@ INFS = ["infinitive"]
 PARTICIPLE = ["participle"]
 MOODS = ["conditional", "indicative"]
 PASS = ["passive", "active"]
-PERSONAL = ["impersonal", "personal", "by person"]  # == personal
+IMPERSONAL = [
+    "impersonal",
+    "monopersonal",
+]
+PERSONAL = ["personal", "by person"]
 ROLE = ["auxiliary"]  # aka fine grained pos
 TENSE = ["past", "present"]
 # XXX: We can have for example: "in simple past tense" - in this case simple
 # should be removed so we don't try to put it in assoc
 VERB_WORDS = (
-    PERS + INFS + PARTICIPLE + MOODS + PASS + TRANSITIVITY + PERSONAL + ROLE + TENSE
+    PERS
+    + INFS
+    + PARTICIPLE
+    + MOODS
+    + PASS
+    + TRANSITIVITY
+    + IMPERSONAL
+    + PERSONAL
+    + ROLE
+    + TENSE
 )
 POS_HINT = {"coordinating": "conj"}
 

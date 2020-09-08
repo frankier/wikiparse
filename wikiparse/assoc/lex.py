@@ -1,7 +1,7 @@
 from typing import List, Iterator
 
-from mwparserfromhell.wikicode import Template
-from more_itertools import chunked
+from mwparserfromhell.wikicode import Template, Wikilink, Text, Wikicode
+from more_itertools import chunked, peekable
 from nltk.tokenize.regexp import RegexpTokenizer
 
 from .fst import bit_fst, lb_tmpl_bit_fst
@@ -22,7 +22,7 @@ from ..utils.fst import LazyFst
 from ..utils.nlp import detect_fi_en
 from ..data.gram_words import grammar_word_tokeniser
 from ..exceptions import unknown_structure
-from .identispan import AssocSpan, AssocSpanType
+from .identispan import AssocSpan, AssocSpanType, has_grammar_hint, has_grammar_word
 
 
 def tokenise_grammar_words(bit: str) -> List[str]:
@@ -31,15 +31,13 @@ def tokenise_grammar_words(bit: str) -> List[str]:
 
 
 ORABLE_TAGS = ["case", "mood", "pass", "inf", "tense"]
-SINGLE_TAGS = ["trans", "part"]
-GRAM_ROLE_TAGS = ["role", "personal"]
+SINGLE_TAGS = ["trans", "part", "personal"]
+GRAM_ROLE_TAGS = ["role"]
 
 
 def lex_bit_tokens(
     ctx: ParseContext, fst: LazyFst, tokens: List[str]
 ) -> Iterator[Token]:
-    from .identispan import has_grammar_hint
-
     if not tokens:
         return
     lookup_res = fst.lookup_partial(tokens, longest_only=True)
@@ -169,6 +167,45 @@ def lex_bit(ctx: ParseContext, fst: LazyFst, bit: str) -> Iterator[Token]:
     yield from filter_double_headword(lex_bit_tokens(ctx, fst, tokens))
 
 
+def lex_bit_bypass_links(
+    ctx: ParseContext, fst: LazyFst, root: Wikicode
+) -> Iterator[Token]:
+    buf: List[Wikicode] = []
+    nodes = peekable(root.nodes)
+
+    def flush_buf():
+        if not buf:
+            return []
+        return lex_bit(ctx, fst, "".join(str(bit) for bit in buf))
+
+    for node in nodes:
+        if isinstance(node, Wikilink):
+            title = str(node.title)
+            if has_grammar_word(title):
+                # Link will get consumed by lexing stage instead
+                buf.append(node)
+                continue
+            text = node.text
+            if (
+                buf
+                and isinstance(buf[-1], Text)
+                and buf[-1].value
+                and buf[-1].value[-1].isspace()
+            ):
+                title = buf[-1].value + title
+                buf.pop()
+            peeked = nodes.peek(None)
+            if isinstance(peeked, Text) and peeked.value and peeked.value[0].isspace():
+                title = title + peeked.value
+            yield from flush_buf()
+            yield TreeFragToken(
+                AssocWord(word_type=WordType.assoc, form=text, link=title)
+            )
+        else:
+            buf.append(node)
+    yield from flush_buf()
+
+
 def split_out_tidle(bits: List[str]) -> List[str]:
     new_bits = []
     num_tidles = 0
@@ -231,17 +268,23 @@ def unparse_lb_template(ctx: ParseContext, lb_template: Template) -> Iterator[To
     for idx, param in enumerate(lb_template.params[1:]):
         if idx > 0:
             yield CombToken(symbol=CombTokenType.template_bar)
-        yield from lex_bit(ctx, lb_tmpl_bit_fst, str(param))
+        yield from lex_bit_bypass_links(ctx, lb_tmpl_bit_fst, param.value)
     yield BracketToken(
         polarity=BracketTokenPole.closer, variety=BracketTokenVar.lb_template
     )
 
 
 def lex_span(ctx: ParseContext, assoc_span: AssocSpan) -> Iterator[Token]:
-    if assoc_span.typ == AssocSpanType.lb_template:
+    if assoc_span.typ == AssocSpanType.deriv:
+        if isinstance(assoc_span.payload, Template):
+            return unparse_lb_template(ctx, assoc_span.payload)
+        else:
+            assert isinstance(assoc_span.payload, Wikicode)
+            return lex_bit_bypass_links(ctx, bit_fst, assoc_span.payload)
+    elif assoc_span.typ == AssocSpanType.lb_template:
         assert isinstance(assoc_span.payload, Template)
         return unparse_lb_template(ctx, assoc_span.payload)
     else:
         assert assoc_span.typ in (AssocSpanType.bracket, AssocSpanType.before_eq)
-        assert isinstance(assoc_span.payload, str)
-        return lex_bit(ctx, bit_fst, assoc_span.payload)
+        assert isinstance(assoc_span.payload, Wikicode)
+        return lex_bit_bypass_links(ctx, bit_fst, assoc_span.payload)

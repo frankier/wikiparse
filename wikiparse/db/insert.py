@@ -130,6 +130,24 @@ def insert_relation(session, lemma: str, rel, headword_id_map):
     )
 
 
+def insert_deriv(session, lemma: str, deriv, headword_id_map):
+    lemma_id = ensure_lemma(session, lemma, headword_id_map)
+    link = deriv.get("link")
+    if link is not None:
+        child_lemma_id = ensure_lemma(session, link, headword_id_map)
+    else:
+        child_lemma_id = None
+    insert(
+        session,
+        tables.derived_term,
+        headword_id=lemma_id,
+        derived_id=child_lemma_id,
+        disp=deriv.get("disp"),
+        gloss=deriv.get("gloss"),
+        extra=deriv,
+    )
+
+
 def insert_defns_safe(session, lemma_name: str, defns: DictTree2L[List[Dict]]):
     try:
         insert_defns(session, lemma_name, defns)

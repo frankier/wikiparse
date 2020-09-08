@@ -160,7 +160,9 @@ def parse_stats_cov(inf):
     got_defns = top.get("got_defns", 0)
     defns_empty = top.get("defns_empty", 0)
     total = got_defns + defns_empty
-    error_df = df.drop(["got_defns", "wf", "defns_empty"], axis=1).set_index("word")
+    error_df = df.drop(
+        ["got_defns", "wf", "defns_empty"], axis=1, errors="ignore"
+    ).set_index("word")
     partial_success = error_df.sum(axis=1).astype(bool).sum() - defns_empty
     complete_success = got_defns - partial_success
     print("Success:", got_defns)

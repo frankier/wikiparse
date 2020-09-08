@@ -12,7 +12,7 @@ from typing import (
     Set,
 )
 from typing_extensions import Protocol, runtime_checkable
-from mwparserfromhell.wikicode import Template
+from mwparserfromhell.wikicode import Wikicode
 from ..exceptions import UnknownStructureException, ParseException, InterpretException
 
 
@@ -91,6 +91,7 @@ class WordType(enum.Enum):
 class AssocWord:
     word_type: Optional[WordType] = None
     form: Optional[str] = None
+    link: Optional[str] = None
     pos: Optional[Set[str]] = None
     inflection_bits: Dict[str, List[str]] = field(default_factory=dict)
     gram_role_bits: List[str] = field(default_factory=list)
@@ -260,12 +261,13 @@ class AssocSpanType(enum.Enum):
     bracket = 2
     before_eq = 3
     qualifier_template = 4
+    deriv = 5
 
 
 @dataclass
 class AssocSpan:
     typ: AssocSpanType
-    payload: Union[str, Template]
+    payload: Wikicode
 
 
 # Pipeline results: identispans + trees

@@ -11,6 +11,7 @@ from wikiparse.db.insert import (
     insert_ety_head,
     insert_morph,
     insert_relation,
+    insert_deriv,
 )
 from wikiparse.utils.cmd import Mutex
 from wikiparse.utils.db import batch_commit, get_session
@@ -145,6 +146,8 @@ def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
                 insert_ety_head(db, lemma, head, headword_id_map)
             elif tag == "relation":
                 insert_relation(db, lemma, head, headword_id_map)
+            elif tag == "deriv":
+                insert_deriv(db, lemma, head, headword_id_map)
             else:
                 assert False
 

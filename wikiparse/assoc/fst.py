@@ -18,6 +18,7 @@ from ..utils.fst import (
 )
 from ..data.gram_words import (
     TRANSITIVITY,
+    IMPERSONAL,
     PERSONAL,
     PARTICIPLE,
     MOODS,
@@ -81,7 +82,6 @@ def build_bit_fst():
     gen_verb_words = [
         ("pass", PASS),
         ("trans", TRANSITIVITY),
-        ("personal", PERSONAL),
         ("role", ROLE),
     ]
     verb_gen_fst = fst_fromseq(out("pos", "verb"), output_tags(gen_verb_words))
@@ -105,6 +105,17 @@ def build_bit_fst():
                     for pers in ("pers.", "person")
                 ]
             )
+        ),
+    )
+
+    # Verb form descriptors / Personal (related to person but treated as distinct here)
+    verb_personal_fst = fst_fromseq(
+        out("pos", "verb", "personal"),
+        union(
+            [
+                seq(inp(union(IMPERSONAL)), out("impersonal")),
+                seq(inp(union(PERSONAL)), out("personal")),
+            ]
         ),
     )
 
@@ -202,6 +213,7 @@ def build_bit_fst():
             noun_pos_case_fst,
             verb_gen_fst,
             verb_pers_fst,
+            verb_personal_fst,
             verb_mood_fst,
             verb_tense_fst,
             infinitive_fst,
