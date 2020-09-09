@@ -22,7 +22,7 @@ def filter_unk(exc):
     if not isinstance(exc, UnknownStructureException):
         return True
     nick = exc.log["nick"]
-    if nick == "unknown-template-ety":
+    if nick in ("unknown-template-ety", "gram-word-not-parsed-as-gram"):
         return False
     if is_bad_assoc(exc) and exc.log["extra"][0] != "lb_template":
         return False
@@ -234,4 +234,4 @@ def test_derived_terms_pitaa():
         if head["tag"] != "deriv":
             continue
         found += 1
-    assert 24 <= found <= 27
+    assert 23 <= found <= 27
