@@ -151,7 +151,7 @@ def insert_deriv(session, lemma: str, deriv, headword_id_map):
 def insert_defns_safe(session, lemma_name: str, defns: DictTree2L[List[Dict]]):
     try:
         insert_defns(session, lemma_name, defns)
-    except:
+    except BaseException:
         session.rollback()
         raise
     else:
