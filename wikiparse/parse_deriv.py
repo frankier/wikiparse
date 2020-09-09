@@ -97,7 +97,7 @@ def handle_deriv(
         # e.g. [[Haiti|haiti]][[-lainen|lainen]]
         link = double_strip(linkish)
         if has_grammar_word(link):
-            return "exception", mk_unknown_structure("gram-word-not-parsed-as-gram")
+            return "exception", mk_unknown_structure("gram-word-not-parsed-as-gram", link)
         # No gram notes so make whole thing link
     else:
         # Gram notes mean that derived term might be longer than the
