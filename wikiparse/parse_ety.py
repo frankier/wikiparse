@@ -67,7 +67,11 @@ def proc_ety_only_derivation_template(template: Template):
             norm_param_num = param_num + 1
             bit = {}
             if lang_template_has(template, norm_param_num):
-                bit["headword"] = str(lang_template_get(template, norm_param_num))
+                headword = str(lang_template_get(template, norm_param_num))
+                if "[[" in headword or "{{" in headword:
+                    yield "exception", mk_unknown_structure("wikicode-template-ety")
+                    return
+                bit["headword"] = headword
             else:
                 break
             if template.has(alt_param_name):
