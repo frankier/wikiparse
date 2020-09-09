@@ -4,6 +4,7 @@ from mwparserfromhell.wikicode import Wikicode, Text, Template
 from more_itertools import peekable
 import re
 
+from .assoc.identispan import has_grammar_word
 from .assoc.models import (
     AssocSpan,
     AssocSpanType,
@@ -12,12 +13,12 @@ from .assoc.models import (
     PlusNode,
     walk,
     PipelineResult,
-    TreeFragToken,
+    TreeFragToken, WordType,
 )
 from .assoc.interpret import interpret_trees
 from .context import ParseContext
-from .exceptions import UnknownStructureException
-
+from .exceptions import UnknownStructureException, mk_unknown_structure
+from .utils.wikicode import double_strip
 
 WORD_RE = re.compile(r"^\w+$")
 
@@ -81,20 +82,26 @@ def handle_deriv(
         interpreted_iter = interpret_trees(ctx, peek_trees_iter)
         interpreted, has_gram = next(interpreted_iter, (None, False))
     else:
+        link = None
         num_words = 0
         num_notes = 0
         interpreted = None
         has_gram = False
     assert interpreted is None or isinstance(interpreted, PlusNode)
-    if num_words == 1 and num_notes and link:
+    if num_words == 1 and num_notes == 0 and link:
         # Link is found already as unambigous
         pass
-    elif not num_notes:
+    elif num_notes == 0:
+        # Strip links and templates
+        # TODO: In some cases these could also be added derivation segments for new headword
+        # e.g. [[Haiti|haiti]][[-lainen|lainen]]
+        link = double_strip(linkish)
+        if has_grammar_word(link):
+            return "exception", mk_unknown_structure("gram-word-not-parsed-as-gram")
         # No gram notes so make whole thing link
-        # TODO: Should probably strip links and templates
-        link = str(linkish)
     else:
-        # Gram notes but clear link for a Wiktionary headword, so just set to None
+        # Gram notes mean that derived term might be longer than the
+        # Wiktionary headword link, so just set it to None to be safe
         link = None
     return "deriv", Deriv(link, disp, gloss, cats, [PipelineResult(span, interpreted, has_gram)])
 
@@ -111,7 +118,7 @@ def search_link(root: AssocNode) -> Tuple[Optional[str], int, int]:
     for node in walk(root):
         if not isinstance(node, AssocWord):
             continue
-        if node.form:
+        if node.form or node.word_type == WordType.headword:
             num_words += 1
         else:
             num_notes += 1

@@ -49,6 +49,8 @@ UNKNOWN_STRUCTURE_MSGS = {
     "multi-template-ety": "Multiple derivation templates found in etymology",
     "unknown-template-ety": "Unknown template found in etymology: '{}'",
     "empty-bit-in-ety": "Empty bit in etymology",
+    # Derived terms
+    "gram-word-not-parsed-as-gram": "Grammar word found, but not found in interpretation tree",
 }
 
 
