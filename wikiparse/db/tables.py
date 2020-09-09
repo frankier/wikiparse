@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Enum, Integer, String, ForeignKey, JSON, MetaData, Table
+from sqlalchemy import Column, Enum, Integer, String, ForeignKey, JSON, MetaData, Table, Boolean
 from ..enums import DerivationType, RelationType
 
 metadata = MetaData()
@@ -9,6 +9,7 @@ headword = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("name", String, unique=True),
+    Column("redlink", Boolean, default=False),
 )
 
 inflection_of = Table(

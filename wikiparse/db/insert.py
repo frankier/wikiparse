@@ -65,11 +65,11 @@ def insert_defns(
     return headword_id, morphs
 
 
-def ensure_lemma(session, lemma, headword_id_map):
+def ensure_lemma(session, lemma, headword_id_map, *, redlink=False):
     if lemma in headword_id_map:
         lemma_id = headword_id_map[lemma]
     else:
-        lemma_id = insert_get_id(session, tables.headword, name=lemma)
+        lemma_id = insert_get_id(session, tables.headword, name=lemma, redlink=redlink)
         headword_id_map[lemma] = lemma_id
     return lemma_id
 
@@ -134,7 +134,7 @@ def insert_deriv(session, lemma: str, deriv, headword_id_map):
     lemma_id = ensure_lemma(session, lemma, headword_id_map)
     link = deriv.get("link")
     if link is not None:
-        child_lemma_id = ensure_lemma(session, link, headword_id_map)
+        child_lemma_id = ensure_lemma(session, link, headword_id_map, redlink=True)
     else:
         child_lemma_id = None
     insert(

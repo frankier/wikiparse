@@ -137,6 +137,8 @@ def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
 
         batch_commit(db, morphs, morph_batch)
 
+    all_derivs = []
+
     with click.progressbar(all_heads, label="Inserting heads") as heads:
 
         def head_batch(lemma_head):
@@ -147,11 +149,20 @@ def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
             elif tag == "relation":
                 insert_relation(db, lemma, head, headword_id_map)
             elif tag == "deriv":
-                insert_deriv(db, lemma, head, headword_id_map)
+                # Defer deriv since any headwords not found during insertion are treated as redlinks
+                all_derivs.append(lemma_head)
             else:
                 assert False
 
         batch_commit(db, heads, head_batch)
+
+    with click.progressbar(all_derivs, label="Inserting derivs") as derivs:
+
+        def deriv_batch(lemma_head):
+            lemma, head = lemma_head
+            insert_deriv(db, lemma, head, headword_id_map)
+
+        batch_commit(db, derivs, deriv_batch)
 
 
 @parse.command()
