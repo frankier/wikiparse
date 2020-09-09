@@ -142,8 +142,8 @@ def insert_deriv(session, lemma: str, deriv, headword_id_map):
         tables.derived_term,
         headword_id=lemma_id,
         derived_id=child_lemma_id,
-        disp=deriv.get("disp"),
-        gloss=deriv.get("gloss"),
+        disp=deriv.get("disp") or "",
+        gloss=deriv.get("gloss") or "",
         extra=deriv,
     )
 
