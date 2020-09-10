@@ -1,5 +1,6 @@
 import orjson
 from typing import Iterable
+from mwparserfromhell.wikicode import Wikicode
 from wikiparse.exceptions import (
     UnknownStructureException,
     ParseException,
@@ -12,7 +13,12 @@ def json_load(file_like):
 
 
 def default(obj):
-    if isinstance(obj, (UnknownStructureException, ParseException, InterpretException)):
+    if isinstance(obj, (
+        UnknownStructureException,
+        ParseException,
+        InterpretException,
+        Wikicode
+    )):
         return str(obj)
     elif isinstance(obj, Iterable):
         return list(obj)
