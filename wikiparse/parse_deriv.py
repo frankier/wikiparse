@@ -1,4 +1,4 @@
-from typing import List, Optional, Iterator, Tuple, Any
+from typing import List, Optional, Iterator, Tuple, Any, Union
 from dataclasses import dataclass, asdict
 from mwparserfromhell.wikicode import Wikicode, Text, Template
 from more_itertools import peekable
@@ -13,7 +13,10 @@ from .assoc.models import (
     PlusNode,
     walk,
     PipelineResult,
-    TreeFragToken, WordType,
+    TreeFragToken,
+    WordType,
+    CombToken,
+    BracketToken,
 )
 from .assoc.interpret import interpret_trees
 from .context import ParseContext
@@ -51,7 +54,7 @@ def handle_deriv(
     disp: Optional[str] = None,
     gloss: Optional[str] = None,
     cats: List[str] = [],
-):
+) -> Tuple[str, Any]:
     """
     At this point we have found all the bits, but we don't yet know:
 
@@ -65,6 +68,7 @@ def handle_deriv(
 
     span = AssocSpan(typ=AssocSpanType.deriv, payload=linkish)
     linkish_str = str(linkish).strip()
+    lexed: List[Union[CombToken, BracketToken, TreeFragToken]]
     if WORD_RE.match(linkish_str):
         # If it's just a single word we can safely assume it's Finnish and shortcut lex_span
         lexed = [TreeFragToken(AssocWord(form=linkish_str))]
@@ -97,13 +101,19 @@ def handle_deriv(
         # e.g. [[Haiti|haiti]][[-lainen|lainen]]
         link = double_strip(linkish)
         if has_grammar_word(link):
-            return "exception", mk_unknown_structure("gram-word-not-parsed-as-gram", link)
+            return (
+                "exception",
+                mk_unknown_structure("gram-word-not-parsed-as-gram", link),
+            )
         # No gram notes so make whole thing link
     else:
         # Gram notes mean that derived term might be longer than the
         # Wiktionary headword link, so just set it to None to be safe
         link = None
-    return "deriv", Deriv(link, disp, gloss, cats, [PipelineResult(span, interpreted, has_gram)])
+    return (
+        "deriv",
+        Deriv(link, disp, gloss, cats, [PipelineResult(span, interpreted, has_gram)]),
+    )
 
 
 def search_link(root: AssocNode) -> Tuple[Optional[str], int, int]:
@@ -127,7 +137,9 @@ def search_link(root: AssocNode) -> Tuple[Optional[str], int, int]:
     return link, num_words, num_notes
 
 
-def handle_der_container(ctx: ParseContext, template: Wikicode) -> Iterator[Deriv]:
+def handle_der_container(
+    ctx: ParseContext, template: Wikicode
+) -> Iterator[Tuple[str, Any]]:
     """
     e.g.
     {{der2|fi|title=phrasal verbs
@@ -151,7 +163,9 @@ def handle_der_container(ctx: ParseContext, template: Wikicode) -> Iterator[Deri
             continue
         l_fi_templates = [
             idx
-            for idx, template in bit._indexed_ifilter(recursive=False, forcetype=Template)
+            for idx, template in bit._indexed_ifilter(
+                recursive=False, forcetype=Template
+            )
             if is_l_fi(template)
         ]
         if len(l_fi_templates) == 1:
