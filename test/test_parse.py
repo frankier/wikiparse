@@ -241,43 +241,49 @@ def test_derived_terms_pitaa():
 
 LEXTRACT_PROC_ASSOC_DEFN_DATA = [
     (
-        "pitää", "Verb",
+        "pitää",
+        "Verb",
         "{{lb|fi|transitive|_|+ partitive}} to [[hold]], [[grasp]], [[grip]]",
     ),
+    ("pitää", "Verb", "{{lb|fi|transitive|_|+ accusative}} to [[keep]], [[take]]",),
     (
-        "pitää", "Verb",
-        "{{lb|fi|transitive|_|+ accusative}} to [[keep]], [[take]]",
-    ),
-    (
-        "pitää", "Verb",
+        "pitää",
+        "Verb",
         "{{lb|fi|transitive|_|+ elative}} to [[like]], [[be]] [[fond]] of",
     ),
     (
-        "pitää", "Verb",
+        "pitää",
+        "Verb",
         "{{lb|fi|transitive|impersonal|genitive + 3rd-pers. singular + 1st infinitive}} to [[have]] (to do); (''in conditional mood'') [[should]] (do), [[ought]] (to do), [[be]] [[suppose]]d (to do), [[would]] [[have]] (to do)",
     ),
     (
-        "pitää", "Verb",
+        "pitää",
+        "Verb",
         "{{lb|fi|transitive|_|+ partitive + essive}} to [[consider]] (to be), to [[assess]], to [[see]] as",
     ),
     (
-        "pitää", "Verb",
+        "pitää",
+        "Verb",
         "{{lb|fi|transitive|_|+ elative + [[kiinni]]}} to [[hold]] [[onto]]",
     ),
     (
-        "pitää", "Verb",
+        "pitää",
+        "Verb",
         "{{lb|fi|transitive|_|+ partitive}} to [[keep]] {{gloss|an animal}}",
     ),
     (
-        "olla", "Verb",
+        "olla",
+        "Verb",
         "{{lb|fi|intransitive|adessive + 3rd person singular + ~}} to [[have]]; to [[own]], to [[possess]]",
     ),
     (
-        "olla", "Verb",
+        "olla",
+        "Verb",
         "{{lb|fi|intransitive|inessive + 3rd person singular + ~}} to [[have]], to [[possess]] {{gloss|as a feature or capability, as opposed to simple possession; almost always for inanimate subjects}}",
     ),
     (
-        "olla", "Verb",
+        "olla",
+        "Verb",
         "{{lb|fi|intransitive|+ genitive + 3rd person singular + passive present participle}} to [[have to]] do something, [[must]] do something; [[be]] [[obliged]]/[[forced]] to do something",
     ),
 ]

@@ -101,7 +101,9 @@ def lex_bit_tokens(
                 word_type = WordType.headword
             else:
                 unknown_structure(("bad-assoc-bit", "unknown-value"), tag, payload)
-            yield TreeFragToken(AssocWord(explicit_word_type=word_type, word_type=word_type))
+            yield TreeFragToken(
+                AssocWord(explicit_word_type=word_type, word_type=word_type)
+            )
         elif tag == "pers":
             # TODO: Need to stop ~ from becoming headword in this case
             if payload != "sg3":
@@ -205,7 +207,11 @@ def lex_bit_bypass_links(
                 text = buf[-1].value + text
                 buf.pop()
             peeked = nodes.peek(None)
-            if isinstance(peeked, Text) and peeked.value and not peeked.value[0].isspace():
+            if (
+                isinstance(peeked, Text)
+                and peeked.value
+                and not peeked.value[0].isspace()
+            ):
                 text = text + peeked.value
             yield from flush_buf()
             yield TreeFragToken(
