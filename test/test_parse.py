@@ -1,7 +1,9 @@
 import os
 import re
 from os.path import join as pjoin
-from wikiparse.assoc import is_bad_assoc
+from wikiparse.assoc import is_bad_assoc, proc_assoc
+from wikiparse.assoc.models import AssocSpanType
+from wikiparse.context import ParseContext
 from wikiparse.db.insert import flatten_senses
 from wikiparse.parse import parse_enwiktionary_page
 from wikiparse.parse_ety import proc_form_template
@@ -235,3 +237,55 @@ def test_derived_terms_pitaa():
             continue
         found += 1
     assert 23 <= found <= 27
+
+
+LEXTRACT_PROC_ASSOC_DEFN_DATA = [
+    (
+        "pitää", "Verb",
+        "{{lb|fi|transitive|_|+ partitive}} to [[hold]], [[grasp]], [[grip]]",
+    ),
+    (
+        "pitää", "Verb",
+        "{{lb|fi|transitive|_|+ accusative}} to [[keep]], [[take]]",
+    ),
+    (
+        "pitää", "Verb",
+        "{{lb|fi|transitive|_|+ elative}} to [[like]], [[be]] [[fond]] of",
+    ),
+    (
+        "pitää", "Verb",
+        "{{lb|fi|transitive|impersonal|genitive + 3rd-pers. singular + 1st infinitive}} to [[have]] (to do); (''in conditional mood'') [[should]] (do), [[ought]] (to do), [[be]] [[suppose]]d (to do), [[would]] [[have]] (to do)",
+    ),
+    (
+        "pitää", "Verb",
+        "{{lb|fi|transitive|_|+ partitive + essive}} to [[consider]] (to be), to [[assess]], to [[see]] as",
+    ),
+    (
+        "pitää", "Verb",
+        "{{lb|fi|transitive|_|+ elative + [[kiinni]]}} to [[hold]] [[onto]]",
+    ),
+    (
+        "pitää", "Verb",
+        "{{lb|fi|transitive|_|+ partitive}} to [[keep]] {{gloss|an animal}}",
+    ),
+    (
+        "olla", "Verb",
+        "{{lb|fi|intransitive|adessive + 3rd person singular + ~}} to [[have]]; to [[own]], to [[possess]]",
+    ),
+    (
+        "olla", "Verb",
+        "{{lb|fi|intransitive|inessive + 3rd person singular + ~}} to [[have]], to [[possess]] {{gloss|as a feature or capability, as opposed to simple possession; almost always for inanimate subjects}}",
+    ),
+    (
+        "olla", "Verb",
+        "{{lb|fi|intransitive|+ genitive + 3rd person singular + passive present participle}} to [[have to]] do something, [[must]] do something; [[be]] [[obliged]]/[[forced]] to do something",
+    ),
+]
+
+
+@pytest.mark.parametrize("lemma, pos, defn", LEXTRACT_PROC_ASSOC_DEFN_DATA)
+def test_proc_assoc_for_lextract(lemma, pos, defn):
+    results = proc_assoc(ParseContext(lemma, pos), defn)
+    templates = [res for res in results if res.span.typ == AssocSpanType.lb_template]
+    assert len(templates) == 1
+    assert templates[0].tree_has_gram
