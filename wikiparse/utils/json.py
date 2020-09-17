@@ -13,12 +13,9 @@ def json_load(file_like):
 
 
 def default(obj):
-    if isinstance(obj, (
-        UnknownStructureException,
-        ParseException,
-        InterpretException,
-        Wikicode
-    )):
+    if isinstance(
+        obj, (UnknownStructureException, ParseException, InterpretException, Wikicode)
+    ):
         return str(obj)
     elif isinstance(obj, Iterable):
         return list(obj)

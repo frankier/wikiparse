@@ -1,4 +1,14 @@
-from sqlalchemy import Column, Enum, Integer, String, ForeignKey, JSON, MetaData, Table, Boolean
+from sqlalchemy import (
+    Column,
+    Enum,
+    Integer,
+    String,
+    ForeignKey,
+    JSON,
+    MetaData,
+    Table,
+    Boolean,
+)
 from ..enums import DerivationType, RelationType
 
 metadata = MetaData()
