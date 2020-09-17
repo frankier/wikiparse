@@ -185,7 +185,7 @@ def lex_bit_bypass_links(
                 # Link will get consumed by lexing stage instead
                 buf.append(node)
                 continue
-            text = str(node.text)
+            text = str(node.text) if node.text is not None else title
             # Merge any adjacent bits into text
             # This happens sometimes in situations when people write something like:
             # [[sika|sian]]puolukka
