@@ -96,6 +96,7 @@ class AssocWord:
     inflection_bits: Dict[str, List[str]] = field(default_factory=dict)
     gram_role_bits: List[str] = field(default_factory=list)
     lex_raw: List[Tuple[str, str]] = field(default_factory=list)
+    explicit_word_type: Optional[WordType] = None
 
     def shape(self) -> Tuple[bool, bool, int, int, int]:
         return (

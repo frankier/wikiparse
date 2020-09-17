@@ -101,7 +101,7 @@ def lex_bit_tokens(
                 word_type = WordType.headword
             else:
                 unknown_structure(("bad-assoc-bit", "unknown-value"), tag, payload)
-            yield TreeFragToken(AssocWord(word_type=word_type))
+            yield TreeFragToken(AssocWord(explicit_word_type=word_type, word_type=word_type))
         elif tag == "pers":
             # TODO: Need to stop ~ from becoming headword in this case
             if payload != "sg3":

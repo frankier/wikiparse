@@ -77,7 +77,7 @@ def merge_split_assoc_words(assoc_words: List[AssocWord]) -> List[AssocWord]:
 
     for assoc_word in assoc_words:
         if not head_is_empty and (
-            assoc_word.form or assoc_word.word_type == WordType.headword
+            assoc_word.form or assoc_word.explicit_word_type == WordType.headword
         ):
             # Start new new group
             push_assoc_word()
