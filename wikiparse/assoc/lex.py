@@ -174,9 +174,12 @@ def lex_bit_bypass_links(
     nodes = peekable(root.nodes)
 
     def flush_buf():
+        nonlocal buf
         if not buf:
             return []
-        return lex_bit(ctx, fst, "".join(str(bit) for bit in buf))
+        lexed = lex_bit(ctx, fst, "".join(str(bit) for bit in buf))
+        buf = []
+        return lexed
 
     for node in nodes:
         if isinstance(node, Wikilink):
