@@ -185,18 +185,25 @@ def lex_bit_bypass_links(
                 # Link will get consumed by lexing stage instead
                 buf.append(node)
                 continue
-            text = node.text
+            text = str(node.text)
+            # Merge any adjacent bits into text
+            # This happens sometimes in situations when people write something like:
+            # [[sika|sian]]puolukka
+            # This handling just acts like they wrote instead [[sika|sianpuolukka]]
+            # which is also sometimes used
+            # TODO: Ideally there should be proper handling of when
+            # there are multiple links written together as part of a compounds
             if (
                 buf
                 and isinstance(buf[-1], Text)
                 and buf[-1].value
-                and buf[-1].value[-1].isspace()
+                and not buf[-1].value[-1].isspace()
             ):
-                title = buf[-1].value + title
+                text = buf[-1].value + text
                 buf.pop()
             peeked = nodes.peek(None)
-            if isinstance(peeked, Text) and peeked.value and peeked.value[0].isspace():
-                title = title + peeked.value
+            if isinstance(peeked, Text) and peeked.value and not peeked.value[0].isspace():
+                text = text + peeked.value
             yield from flush_buf()
             yield TreeFragToken(
                 AssocWord(word_type=WordType.assoc, form=text, link=title)
