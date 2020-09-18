@@ -12,3 +12,6 @@ __pycache__/
 /dumpsplit/target
 /.snakemake/
 .mypy_cache/
+/.idea/
+/.vscode/
+/.dockerignore/
