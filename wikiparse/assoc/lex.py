@@ -183,7 +183,11 @@ def lex_bit_bypass_links(
         buf = []
         return lexed
 
+    skips = 0
     for node in nodes:
+        if skips:
+            skips -= 1
+            continue
         if isinstance(node, Wikilink):
             title = str(node.title)
             if has_grammar_word(title):
@@ -212,7 +216,8 @@ def lex_bit_bypass_links(
                 and peeked.value
                 and not peeked.value[0].isspace()
             ):
-                text = text + peeked.value
+                skips += 1
+                text = text + peeked.value.rstrip()
             yield from flush_buf()
             yield TreeFragToken(
                 AssocWord(word_type=WordType.assoc, form=text, link=title)

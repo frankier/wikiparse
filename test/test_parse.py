@@ -2,7 +2,9 @@ import os
 import re
 from os.path import join as pjoin
 from wikiparse.assoc import is_bad_assoc, proc_assoc
-from wikiparse.assoc.models import AssocSpanType
+from wikiparse.assoc.fst import bit_fst
+from wikiparse.assoc.lex import lex_bit_bypass_links
+from wikiparse.assoc.models import AssocSpanType, TreeFragToken, AssocWord
 from wikiparse.context import ParseContext
 from wikiparse.db.insert import flatten_senses
 from wikiparse.parse import parse_enwiktionary_page
@@ -295,3 +297,17 @@ def test_proc_assoc_for_lextract(lemma, pos, defn):
     templates = [res for res in results if res.span.typ == AssocSpanType.lb_template]
     assert len(templates) == 1
     assert templates[0].tree_has_gram
+
+
+KOITUA_JOKIN_KOHTALOKSI = "~ + ''genitive'' + [[kohtalo]]ksi"
+
+
+def test_stem_ending_spans_link():
+    ctx = ParseContext("koitua", "Verb")
+    tokens = list(lex_bit_bypass_links(ctx, bit_fst, parse(KOITUA_JOKIN_KOHTALOKSI)))
+    assert len(tokens)
+    link = tokens[-1]
+    assert isinstance(link, TreeFragToken)
+    assert isinstance(link.inner, AssocWord)
+    assert link.inner.link == "kohtalo"
+    assert link.inner.form == "kohtaloksi"
