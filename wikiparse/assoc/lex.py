@@ -3,6 +3,7 @@ from typing import List, Iterator
 from mwparserfromhell.wikicode import Template, Wikilink, Text, Wikicode
 from more_itertools import chunked, peekable
 from nltk.tokenize.regexp import RegexpTokenizer
+import re
 
 from .fst import bit_fst, lb_tmpl_bit_fst
 from .models import (
@@ -169,6 +170,10 @@ def lex_bit(ctx: ParseContext, fst: LazyFst, bit: str) -> Iterator[Token]:
     yield from filter_double_headword(lex_bit_tokens(ctx, fst, tokens))
 
 
+ALPHANUM_BEGIN = re.compile(r"^\w+")
+ALPHANUM_END = re.compile(r"\w+$")
+
+
 def lex_bit_bypass_links(
     ctx: ParseContext, fst: LazyFst, root: Wikicode
 ) -> Iterator[Token]:
@@ -206,18 +211,30 @@ def lex_bit_bypass_links(
                 buf
                 and isinstance(buf[-1], Text)
                 and buf[-1].value
-                and not buf[-1].value[-1].isspace()
             ):
-                text = buf[-1].value + text
-                buf.pop()
+                prev = buf[-1].value
+                match = ALPHANUM_END.search(prev)
+                if match:
+                    new = ALPHANUM_END.sub("", prev)
+                    if len(new):
+                        buf[-1].value = new
+                    else:
+                        buf.pop()
+                    text = match[0] + text
             peeked = nodes.peek(None)
             if (
                 isinstance(peeked, Text)
                 and peeked.value
-                and not peeked.value[0].isspace()
             ):
-                skips += 1
-                text = text + peeked.value.rstrip()
+                nxt = peeked.value
+                match = ALPHANUM_BEGIN.search(nxt)
+                if match:
+                    new = ALPHANUM_BEGIN.sub("", nxt)
+                    if len(new):
+                        peeked.value = new
+                    else:
+                        skips += 1
+                    text = text + peeked.value.rstrip()
             yield from flush_buf()
             yield TreeFragToken(
                 AssocWord(word_type=WordType.assoc, form=text, link=title)

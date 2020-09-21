@@ -311,3 +311,21 @@ def test_stem_ending_spans_link():
     assert isinstance(link.inner, AssocWord)
     assert link.inner.link == "kohtalo"
     assert link.inner.form == "kohtaloksi"
+
+
+# TODO:
+#  1. fix it so this is splits on 'in the expression'
+#  2. add test for comma ending link
+"""
+LOPPU_OUT_OF = "[[out of]], in the expression ''ablative'' + [[olla#Finnish|3rd-pers. singular of ''olla'']] + ''nominative'' + loppu"
+
+
+def test_comma_ends_link():
+    ctx = ParseContext("loppu", "Adverb")
+    tokens = list(lex_bit_bypass_links(ctx, bit_fst, parse(LOPPU_OUT_OF)))
+    link = tokens[0]
+    assert isinstance(link, TreeFragToken)
+    assert isinstance(link.inner, AssocWord)
+    assert link.inner.link == "out of"
+    assert link.inner.form == "out of"
+"""
