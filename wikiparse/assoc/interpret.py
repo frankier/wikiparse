@@ -308,7 +308,10 @@ def interpret_trees(
             assoc_word_root, others = get_root(is_assoc_word, merged_tree)
             assert assoc_word_root is not None
             assert isinstance(assoc_word_root, AssocWord)
-            if assoc_word_root.form is None and len(assoc_word_root.inflection_bits) == 0:
+            if (
+                assoc_word_root.form is None
+                and len(assoc_word_root.inflection_bits) == 0
+            ):
                 # At this point there is nothing worth making a
                 # singleton PlusNode from, so give up
                 yield tree, False

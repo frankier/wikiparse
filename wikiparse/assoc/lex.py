@@ -209,11 +209,7 @@ def lex_bit_bypass_links(
             # which is also sometimes used
             # TODO: Ideally there should be proper handling of when
             # there are multiple links written together as part of a compounds
-            if (
-                buf
-                and isinstance(buf[-1], Text)
-                and buf[-1].value
-            ):
+            if buf and isinstance(buf[-1], Text) and buf[-1].value:
                 prev = buf[-1].value
                 match = ALPHANUM_END.search(prev)
                 if match:
@@ -224,10 +220,7 @@ def lex_bit_bypass_links(
                         buf.pop()
                     text = match[0] + text
             peeked = nodes.peek(None)
-            if (
-                isinstance(peeked, Text)
-                and peeked.value
-            ):
+            if isinstance(peeked, Text) and peeked.value:
                 nxt = peeked.value
                 match = ALPHANUM_BEGIN.search(nxt)
                 if match:
