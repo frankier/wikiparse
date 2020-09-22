@@ -329,3 +329,11 @@ def test_comma_ends_link():
     assert link.inner.link == "out of"
     assert link.inner.form == "out of"
 """
+
+
+def test_no_gram_for_mme():
+    results = [tree for tree in proc_assoc(
+        ParseContext("-mme", "Suffix"),
+        "{{lb|fi|personal}} {{n-g|Forms the first-person plural of verbs.}}"
+    ) if tree.tree_has_gram]
+    assert len(results) == 0

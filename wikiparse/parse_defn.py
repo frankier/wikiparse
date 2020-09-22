@@ -295,6 +295,8 @@ def get_senses_and_examples_defn(
                 morph_dict = proc_defn_form_template(form_template)
         non_gloss_template_matches = t_match.intersection(NON_GLOSS_TEMPLATES)
         if non_gloss_template_matches:
+            # TODO: Not sure about this removal of the template
+            # Should grammar notes within n-g be excluded?
             non_gloss = True
             template = get_template(non_gloss_template_matches)
             new_contents = str(template.get(1))

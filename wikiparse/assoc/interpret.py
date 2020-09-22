@@ -283,6 +283,7 @@ def interpret_trees(
         has_gram = tree_has_gram(tree)
         if not has_gram:
             yield tree, False
+            continue
         print("PRE MERGE")
         pprint(tree)
         # Step 1. Merge all AssocWordSeqs
@@ -307,6 +308,11 @@ def interpret_trees(
             assoc_word_root, others = get_root(is_assoc_word, merged_tree)
             assert assoc_word_root is not None
             assert isinstance(assoc_word_root, AssocWord)
+            if assoc_word_root.form is None and len(assoc_word_root.inflection_bits) == 0:
+                # At this point there is nothing worth making a
+                # singleton PlusNode from, so give up
+                yield tree, False
+                continue
             root = PlusNode([assoc_word_root])
 
             # XXX: Possiblity at this point if there's more than once, we
