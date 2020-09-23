@@ -275,6 +275,13 @@ def remove_empty_plusnodes(node: AssocNode):
     return node
 
 
+def can_promote_plus(assoc_word: AssocWord):
+    promotable_inflection_bits = assoc_word.inflection_bits.copy()
+    if "personal" in promotable_inflection_bits:
+        del promotable_inflection_bits["personal"]
+    return assoc_word.form is not None or len(promotable_inflection_bits) > 0
+
+
 def interpret_trees(
     ctx: ParseContext, trees_iter: Iterable[Tuple[int, AssocNode]]
 ) -> Iterator[Tuple[AssocNode, bool]]:
@@ -308,10 +315,8 @@ def interpret_trees(
             assoc_word_root, others = get_root(is_assoc_word, merged_tree)
             assert assoc_word_root is not None
             assert isinstance(assoc_word_root, AssocWord)
-            if (
-                assoc_word_root.form is None
-                and len(assoc_word_root.inflection_bits) == 0
-            ):
+            # personal...
+            if not can_promote_plus(assoc_word_root):
                 # At this point there is nothing worth making a
                 # singleton PlusNode from, so give up
                 yield tree, False

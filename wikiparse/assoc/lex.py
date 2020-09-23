@@ -66,8 +66,6 @@ def lex_bit_tokens(
         print("pair", pair)
         assert len(pair) == 2
         tag, payload = pair
-        if tag == "personal" and ctx.pos_heading == "Suffix":
-            tag = "poscat"
         # if tag in lex_raw and tag not in ORABLE_TAGS:
         # unknown_structure(("bad-assoc-bit", "too-many-tags"))
         # else:
