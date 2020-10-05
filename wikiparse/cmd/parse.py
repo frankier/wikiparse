@@ -165,10 +165,7 @@ def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
         batch_commit(db, derivs, deriv_batch)
 
 
-@parse.command()
-@click.argument("indir", type=click.Path())
-@click.argument("filterfile", type=click.File(mode="r"), required=False)
-def insert_dir(indir: str, filterfile: Optional[TextIO]):
+def parse_filterfile(filterfile):
     members = None
     if filterfile is not None:
         members = []
@@ -177,4 +174,12 @@ def insert_dir(indir: str, filterfile: Optional[TextIO]):
             if not word:
                 continue
             members.append(word)
+    return members
+
+
+@parse.command()
+@click.argument("indir", type=click.Path())
+@click.argument("filterfile", type=click.File(mode="r"), required=False)
+def insert_dir(indir: str, filterfile: Optional[TextIO]):
+    members = parse_filterfile(filterfile)
     insert_dir_inner(get_session(), indir, members)
