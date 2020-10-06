@@ -24,6 +24,8 @@ COPY pyproject.toml pyproject.toml
 RUN ~/.poetry/bin/poetry config virtualenvs.create false && \
     ~/.poetry/bin/poetry install
 
+RUN echo "/usr/lib/python3/dist-packages/" > /usr/local/lib/python3.7/site-packages/hfst.pth
+
 COPY . /app
 
 CMD snakemake
