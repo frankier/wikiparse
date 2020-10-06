@@ -28,11 +28,11 @@ test:typecheck:
   script:
     - mypy wikiparse parse.py
 
-test:nose2:
+test:pytest:
   stage: test
   image: $CI_REGISTRY_IMAGE
   script:
-    - nose2
+    - pytest test
 
 test:flake8:
   stage: test
