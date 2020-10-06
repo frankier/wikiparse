@@ -20,6 +20,7 @@ RUN set -ex && mkdir /app && mkdir /app/wikiparse && touch /app/wikiparse/__init
 WORKDIR /app
 
 COPY pyproject.toml pyproject.toml
+COPY poetry.lock poetry.lock
 
 RUN ~/.poetry/bin/poetry config virtualenvs.create false && \
     ~/.poetry/bin/poetry install
