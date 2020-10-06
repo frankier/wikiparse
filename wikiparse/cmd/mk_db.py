@@ -6,8 +6,9 @@ from wikiparse.utils.db import get_session
 logger = logging.getLogger(__name__)
 
 
-def mk_cmds(metadata):
+def mk_cmds(get_metadata):
     def drop_trunc(which, extra=""):
+        metadata = get_metadata()
         session = get_session()
 
         for t in reversed(metadata.sorted_tables):
@@ -22,6 +23,7 @@ def mk_cmds(metadata):
 
     @db.command()
     def create():
+        metadata = get_metadata()
         session = get_session()
         metadata.create_all(session().get_bind().engine)
 
