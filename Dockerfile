@@ -4,7 +4,10 @@ RUN apt-get update && apt-get install -y \
         # Build base
         gcc gfortran build-essential wget curl \
         # Python stuff
-        python3 python3-dev python3-pip
+        python3 python3-dev python3-pip \
+        # Graphviz
+        graphviz libgraphviz-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python3
