@@ -3,6 +3,7 @@ import click_log
 import logging
 import orjson
 from pprint import pprint
+import subprocess
 from typing import Any, Dict, List, Optional, Tuple, TextIO
 
 from wikiparse.parse import process_dump, process_pages, parse_enwiktionary_page
@@ -12,6 +13,7 @@ from wikiparse.db.insert import (
     insert_morph,
     insert_relation,
     insert_deriv,
+    insert_metadata,
 )
 from wikiparse.utils.cmd import Mutex
 from wikiparse.utils.db import batch_commit, get_session
@@ -104,6 +106,14 @@ def parse_file(filename):
     pprint(defns)
 
 
+def add_rev(metadata):
+    try:
+        rev = subprocess.check_output(["git", "describe", "--always"]).strip()
+    except subprocess.SubprocessError:
+        rev = "Could not get rev"
+    metadata["scrape_rev"] = rev
+
+
 def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
     headword_id_map = {}
     all_morphs = []  # type: List[Tuple[int, Optional[Dict]]]
@@ -119,6 +129,10 @@ def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):
             if lemma_name.startswith("."):
                 return
             results = orjson.loads(wordf.read())
+            if lemma_name == "__metadata__.json":
+                add_rev(results)
+                insert_metadata(db, results)
+                return
             if "defns" in results:
                 defns = results["defns"]
                 headword_id, morphs = insert_defns(db, lemma_name, defns)

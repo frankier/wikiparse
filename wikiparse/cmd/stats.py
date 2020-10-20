@@ -7,6 +7,8 @@ import pandas as pd
 import csv
 import click
 import click_log
+from wikiparse.db.insert import insert_metadata
+from wikiparse.utils.db import get_session
 
 
 def freq(word):
@@ -154,7 +156,8 @@ def parse_stats_top10(inf, col):
 
 @stats.command()
 @click.argument("inf")
-def parse_stats_cov(inf):
+@click.option("--insert/--no-insert")
+def parse_stats_cov(inf, insert):
     df = pd.read_csv(inf)
     top = dict(top_events(df))
     got_defns = top.get("got_defns", 0)
@@ -165,13 +168,21 @@ def parse_stats_cov(inf):
     ).set_index("word")
     partial_success = error_df.sum(axis=1).astype(bool).sum() - defns_empty
     complete_success = got_defns - partial_success
-    print("Success:", got_defns)
-    print("Partial success:", partial_success)
-    print("Complete success:", complete_success)
-    print("Empty:", defns_empty)
-    print("Total:", total)
-    print("Partial coverage: {:.1f}".format((got_defns / total) * 100))
-    print("Full coverage: {:.1f}".format((complete_success / total) * 100))
+    cov_stats = {
+        "success": got_defns,
+        "partial_success": partial_success,
+        "complete_success": complete_success,
+        "empty": defns_empty,
+        "total": total,
+        "partial_coverage": "{:.1f}".format((got_defns / total) * 100),
+        "full_coverage": "{:.1f}".format((complete_success / total) * 100),
+    }
+    if insert:
+        db = get_session()
+        insert_metadata(db, cov_stats)
+        db.commit()
+    for k, v in cov_stats.items():
+        print(k.title().replace("_", " "), got_defns)
 
 
 @stats.command()

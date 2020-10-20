@@ -92,20 +92,22 @@ rule insert_wikiparse:
     output:
         defns_db = WORK + "/defns.db"
     shell:
-        "export DATABASE_URL=sqlite:///{output.defns_db};" + 
+        "export DATABASE_URL=sqlite:///{output.defns_db};" +
         " python parse.py create" +
         " && python parse.py insert-dir {input.parsed}"
 
 rule proc_stats:
     input:
-        stats_db = STATS + "/stats.db"
+        stats_db = STATS + "/stats.db",
+        defns_db = WORK + "/defns.db"
     output:
         agg_csv = STATS + "/stats.csv",
         cov = STATS + "/cov.txt",
         probs = STATS + "/probs.txt"
     shell:
-        "python parse.py parse-stats-agg {input.stats_db} {output.agg_csv}" + 
-        " && python parse.py parse-stats-cov {output.agg_csv} > {output.cov}" + 
+        "export DATABASE_URL=sqlite:///{input.defns_db};" +
+        " python parse.py parse-stats-agg {input.stats_db} {output.agg_csv}" +
+        " && python parse.py parse-stats-cov --insert {output.agg_csv} > {output.cov}" +
         " && python parse.py parse-stats-probs {output.agg_csv} > {output.probs}"
 
 onsuccess:

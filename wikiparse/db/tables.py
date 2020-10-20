@@ -108,3 +108,11 @@ usage_example = Table(
     Column("example", String, nullable=False),
     Column("gloss", String, nullable=False),
 )
+
+meta = Table(
+    "meta",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("key", String, unique=True, nullable=False),
+    Column("value", String, nullable=False),
+)

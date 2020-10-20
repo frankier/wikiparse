@@ -15,6 +15,7 @@ from os.path import join as pjoin
 from typing import Any, Dict, List, Union, Tuple, Iterator, Optional
 from mwxml.iteration import Dump, page as mwxml_iteration_page
 from multiprocessing import Pool
+from shutil import copyfile
 
 from wikiparse.utils.wikicode import get_heading, get_lead, parse_nested_list
 from wikiparse.utils.stats_log import get_stats_logger
@@ -286,6 +287,9 @@ class ProcessPageFile:
         from urllib.parse import unquote
 
         name, path = entry
+        if name == "__metadata__.json":
+            copyfile(path, pjoin(self.outdir, "__metadata__.json"))
+            return
         title = unquote(name)
         results = proc_text(title, open(path).read())
         if results is not None:

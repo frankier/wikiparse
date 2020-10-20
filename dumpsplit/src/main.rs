@@ -2,6 +2,7 @@
 
 use std::env;
 use std::path::Path;
+use std::str;
 use std::fs::{create_dir_all, File};
 use std::io::prelude::*;
 use std::io::{self, BufReader};
@@ -31,9 +32,13 @@ fn main() {
     let mut in_title = false;
     let mut in_revision = false;
     let mut in_text = false;
+    let mut in_dbname = false;
+    let mut in_timestamp = false;
     let mut count = 0;
     let mut revisions = 0;
     let mut buf = Vec::new();
+    let mut dbname: Option<String> = None;
+    let mut last_timestamp: String = String::from("0000-00-00T00:00:00Z");
 
     loop {
         match reader.read_event(&mut buf) {
@@ -56,6 +61,12 @@ fn main() {
                     b"text" => {
                         in_text = true;
                     }
+                    b"dbname" => {
+                        in_dbname = true;
+                    }
+                    b"timestamp" => {
+                        in_timestamp = true;
+                    }
                     _ => (),
                 }
             },
@@ -69,6 +80,12 @@ fn main() {
                     }
                     b"text" => {
                         in_text = false;
+                    }
+                    b"dbname" => {
+                        in_dbname = false;
+                    }
+                    b"timestamp" => {
+                        in_timestamp = false;
                     }
                     _ => (),
                 }
@@ -119,6 +136,13 @@ fn main() {
                     file.write_all(&unescaped).unwrap();
                 } else if in_title {
                     title = Some(e.unescape_and_decode_without_bom(&reader).unwrap());
+                } else if in_dbname {
+                    dbname = Some(e.unescape_and_decode_without_bom(&reader).unwrap());
+                } else if in_timestamp {
+                    let new_timestamp = e.escaped();
+                    if new_timestamp > last_timestamp.as_bytes() {
+                        last_timestamp.replace_range(.., str::from_utf8(&new_timestamp).unwrap());
+                    }
                 }
             }
             Ok(Event::Eof) => break,
@@ -127,4 +151,12 @@ fn main() {
         }
     }
     println!("Got {:?}", count);
+    let path = fin_out_dir.join("__metadata__.json");
+    let mut file = File::create(&path).unwrap();
+    write!(
+        file,
+        r#"{{"dbname": "{}", "last_timestamp": "{}"}}"#,
+        dbname.unwrap(),
+        last_timestamp
+    ).unwrap();
 }
