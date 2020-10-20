@@ -106,12 +106,12 @@ def parse_file(filename):
     pprint(defns)
 
 
-def add_rev(metadata):
+def add_rev(metadata, key="scrape_rev"):
     try:
         rev = subprocess.check_output(["git", "describe", "--always"]).strip()
     except subprocess.SubprocessError:
         rev = "Could not get rev"
-    metadata["scrape_rev"] = rev
+    metadata[key] = rev
 
 
 def insert_dir_inner(db, indir: str, members: Optional[List[str]] = None):

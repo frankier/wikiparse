@@ -158,8 +158,8 @@ def insert_defns_safe(session, lemma_name: str, defns: DictTree2L[List[Dict]]):
         session.commit()
 
 
-def insert_metadata(session, metadata):
+def insert_metadata(session, metadata, table=tables.meta):
     for key, value in metadata.items():
         insert(
-            session, tables.meta, key=key, value=str(value),
+            session, table, key=key, value=str(value),
         )
