@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Wiktionary parsing for Finnish word definitions"
 authors = ["Frankie Robertson <frankie@robertson.name>"]
 license = "Apache-2.0"
+include = ["wikiparse/py.typed"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
