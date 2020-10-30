@@ -108,7 +108,11 @@ def parse_file(filename):
 
 def add_rev(metadata, key="scrape_rev"):
     try:
-        rev = subprocess.check_output(["git", "describe", "--always"]).strip()
+        rev = (
+            subprocess.check_output(["git", "describe", "--always"])
+            .strip()
+            .decode("utf-8")
+        )
     except subprocess.SubprocessError:
         rev = "Could not get rev"
     metadata[key] = rev
